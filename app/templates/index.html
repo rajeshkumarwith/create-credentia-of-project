@@ -1,0 +1,33 @@
+<html>
+<head>
+    <title>Page Title</title>
+</head>
+<body>
+  <table>
+    <thead>
+        <tr>
+            {% for key, value in df_dict.items %}
+                <th>{{ key }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    {% for rec in df_rec %}
+        <tr>
+            {% for i2, k2 in rec.items %}
+                <td>{{ k2 }}</td>
+            {% endfor %}
+        </tr>
+    {% endfor %}
+  </table>
+    <!-- {% for key,value in df.items %}
+    <p>         
+         {{ key}} : {{value}}
+    </p>
+    {% endfor %} -->
+    <!-- {% for key,value in df.items %}
+    <p>         
+         {{ value }}
+    </p>
+    {% endfor %} -->
+</body>
+
