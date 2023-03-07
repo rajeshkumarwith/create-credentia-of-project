@@ -208,18 +208,18 @@ service = gsc_auth(scopes)
 
 
 
-# def searchdataapi(request):
-#     scopes = ['https://www.googleapis.com/auth/webmasters']
+def searchdataapi(request):
+    scopes = ['https://www.googleapis.com/auth/webmasters']
 
-#     service=gsc_auth(scopes)
-#     gsc_search_analytics=service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com').execute()
-#     df=pd.DataFrame(gsc_search_analytics['rows'])
-#     data=gsc_sa_df.head(3)
-#     context={
-#        'df_dict':data.to_dict(),
-#        'df_rec':data.to_dict(orient='records') 
-#     }
-#     return render(request,'data.html',context)
+    service=gsc_auth(scopes)
+    gsc_search_analytics=service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com').execute()
+    df=pd.DataFrame(gsc_search_analytics['rows'])
+    data=gsc_sa_df.head(3)
+    context={
+       'df_dict':data.to_dict(),
+       'df_rec':data.to_dict(orient='records') 
+    }
+    return render(request,'data.html',context)
 
 
 
