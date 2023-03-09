@@ -32,8 +32,8 @@ COUNTRY="in"
 SEARCH_URL = "https://www.googleapis.com/customsearch/v1?key={key}&cx={cx}&q={query}&start={start}&num=10&gl=" + COUNTRY
 RESULT_COUNT=20
  
-import requests 
-import pandas as pd
+# import requests 
+# import pandas as pd
 
 def search_api(request):
     pages=int(RESULT_COUNT/10)
@@ -153,7 +153,6 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from oauth2client.client import SignedJwtAssertionCredentials
 from httplib2 import Http
-from apiclient.discovery import build
 
 
 
@@ -210,7 +209,6 @@ service = gsc_auth(scopes)
 
 def searchdataapi(request):
     scopes = ['https://www.googleapis.com/auth/webmasters']
-
     service=gsc_auth(scopes)
     gsc_search_analytics=service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com').execute()
     df=pd.DataFrame(gsc_search_analytics['rows'])
@@ -234,6 +232,19 @@ def searchdataapi(request):
         'df_rec': df.to_dict(orient='records')
         }
   return render(request,'data.html',context)
+
+
+class ProfileAPIView(generics.GenericAPIView):
+    serializer_class=ProfiledataSerializer
+    def post(self,request,*args,**kwargs):
+        serializer=self.serializer_class(request.data)
+        # data=Profile.objects.filter(id=request.data['id']).values()[0]['username']
+        dictV=dict()
+        dictV['username']=Profile.objects.filter(id=request.data['id']).values_list('username')
+        FriendIDS=Friend.objects.filter(id=request.data['id']).values()
+        data=Profile.objects.filter(id__in=FriendIDS).values()
+        return Response({'data':dictV ,'msg':200})
+
 
 
 

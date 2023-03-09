@@ -11,6 +11,7 @@
 
 FROM python:3.10.6-slim-buster
 
+
 ENV PYTHONUNBUFFERED=1
 
 WORKDIR /code
@@ -25,11 +26,6 @@ COPY . .
 
 RUN python manage.py makemigrations
 RUN python manage.py migrate
-# RUN python manage.py loaddata portal/fixtures/seed.yaml
-# RUN python manage.py loaddata scheduler/fixtures/seed.yaml
 
-# EXPOSE 8000
 
-# # # CMD python manage.py runserver 0:8000
-# CMD ["python3","manage.py","runserver"]
 

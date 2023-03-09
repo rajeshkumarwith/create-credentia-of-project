@@ -11,7 +11,8 @@ urlpatterns=[
     path('hello/', views.HelloView.as_view(), name='hello'),
     path('data/',views.searchdata,name='search'),
     path('search',views.data,name='sitemap'),
-    path('searchdata',views.searchdataapi,name='searchdata')
+    path('searchdata',views.searchdataapi,name='searchdata'),
+    path('profile/',views.ProfileAPIView.as_view(), name='profile')
 
 ]
 

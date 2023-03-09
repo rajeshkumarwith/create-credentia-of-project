@@ -14,3 +14,5 @@ class UserSerializer(serializers.Serializer):
         fields=('url','username','email','groups')
 
 
+class ProfiledataSerializer(serializers.Serializer):
+    id=serializers.IntegerField()
