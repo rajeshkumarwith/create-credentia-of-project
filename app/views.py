@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from .serializers import *
 from rest_framework import generics
 from rest_framework.decorators import api_view
-
+import requests
 
 class HelloView(APIView):
     def get(self, request):
@@ -34,7 +34,7 @@ RESULT_COUNT=20
  
 # import requests 
 # import pandas as pd
-
+import logging
 def search_api(request):
     pages=int(RESULT_COUNT/10)
     results = []
@@ -62,11 +62,14 @@ def search_api(request):
 def searchdata(request):
   query='art forms of himachal pradesh'
   df = search_api(query) #returns the dataframe
+  print(df,'ddfddffddfdfdfddfdf')
+  print(type(df),'typetypetypetypetypetypetypetypetypetype')
+  print(type(df['link']),'typelink')
   context = {
     'df_dict': df.to_dict(),
     'df_rec': df.to_dict(orient='records')
     }
-  print('df_dict','dfffffffffdfdfddddddd')
+  
   return render(request, 'index.html', context)
 
 
@@ -205,33 +208,80 @@ service = gsc_auth(scopes)
 #     }
 #     return render(request,'data.html',context)
 
+import pandas as pd
 
 
-def searchdataapi(request):
+def searchdataapiview(request):
     scopes = ['https://www.googleapis.com/auth/webmasters']
-    service=gsc_auth(scopes)
-    gsc_search_analytics=service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com').execute()
-    df=pd.DataFrame(gsc_search_analytics['rows'])
-    data=gsc_sa_df.head(3)
-    context={
-       'df_dict':data.to_dict(),
-       'df_rec':data.to_dict(orient='records') 
+    service = gsc_auth(scopes)
+    requestdata = {
+        "startDate": "2022-03-01",
+        "endDate": "2022-03-15",
+        "dimensions": [
+        "QUERY"
+    ],
+    "rowLimit": 25000
     }
-    return render(request,'data.html',context)
+    gsc_search_analytics = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=requestdata).execute()
+    gsc_sa_df = pd.DataFrame(gsc_search_analytics['rows'])
+    # df=gsc_sa_df.head()
+    # for key,value in df.items():
+    #     print(key,value)
+    # print(df,'sgscgscgscsgsdgscgsc')
+    # print(df,'ddfdfdddddfdffffffffffff')
+    # print(type(df),'typetypetypetypetypetypetypetyeptype')
+    # print(type(df['keys']),'keyskeyskeyskeys')
+    # print(type(df['ctr']),'ctrctrctexctecter')
+    # print(type(df['impressions']),'impressionimpressionimpressionimpression')
+    # print(type(df['position']),'positionpostioitinpostionion')
+    # print(type(df['clicks']),'clickeclikcclikcclickclickclick')
+    # context={
+    #     "df":df['keys']
+    # }
+    # print(context,'context')
+    # return render(request,'my_page.html',context)
+    # df = pd.DataFrame(df['keys'])
+    context = {
+    'df_dict': gsc_sa_df.to_dict(),
+    'df_rec': gsc_sa_df.to_dict(orient='records')
+    }
+    return render(request, 'page.html',context)
 
 
+
+
+# class searchdataapiview(View):    
+#     def get(self,request, *args, **kwargs):
+#         scopes = ['https://www.googleapis.com/auth/webmasters']
+#         service = gsc_auth(scopes)
+#         request = {
+#             "startDate": "2022-03-01",
+#             "endDate": "2022-03-15",
+#             "dimensions": [
+#             "QUERY"
+#         ],
+#         "rowLimit": 25000
+#         }
+#         gsc_search_analytics = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
+#         gsc_sa_df = pd.DataFrame(gsc_search_analytics['rows'])
+#         data=gsc_sa_df.head(3)
+#         return render(request, 'my_page.html', {'df_dict': data.to_dict(), 'df_rec': data.to_dict(orient='records')})
+
+#     def post(request, *args, **kwargs):
+#         pass
 
 import json
 def searchdataapi(request):
   df = pd.DataFrame({
     'col1': [1,2,3,4],
     'col2': ['A','B', 'C', 'D']
-  })
+    })
+  gsc_sa_df = pd.DataFrame(df['rows'])
   context = {
-        'df_dict': df.to_dict(),
-        'df_rec': df.to_dict(orient='records')
+        'df_dict': gsc_sa_df.to_dict(),
+        'df_rec': gsc_sa_df.to_dict(orient='records')
         }
-  return render(request,'data.html',context)
+  return render(request,'show.html',context)
 
 
 class ProfileAPIView(generics.GenericAPIView):
