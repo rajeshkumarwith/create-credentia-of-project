@@ -13,7 +13,15 @@ urlpatterns=[
     path('search',views.data,name='sitemap'),
     path('show',searchdataapiview,name='show'),
     path('searchdata',views.searchdataapi,name='searchdata'),
-    path('profile/',views.ProfileAPIView.as_view(), name='profile')
+    path('profile/',views.ProfileAPIView.as_view(), name='profile'),
+    path('graph/',views.showdataapi.as_view(),name='graph'),
+    path('chart/',showchartapi,name='graph'),
+    path('plot/',views.plot_png,name='plot'),
+    path('figure/',create_figure,name='figure'),
+    path('figuredata/',figure,name='figure'),
+    path('mpl',mpl,name='mpl'),
+    path('d/',DataAPIView.as_view(),name='datad'),
+    path('pie/',pie_chart,name='pie'),
 
 ]
 
