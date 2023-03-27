@@ -118,6 +118,7 @@ def data(request):
     service = gsc_auth(scopes)
     sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:hptourtravel.com').execute()
     service = gsc_auth(scopes)
+    list=[]
     print(service,'sssssssssss')
     request = {
         "startDate": "2022-03-01",
@@ -128,15 +129,52 @@ def data(request):
     "rowLimit": 25000
     }
     gsc_search_analytics = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
-    # context={
-    #     'df_dict':df.to_dict(),
-    #     'df_rec':df.to_dict(orient='records')
-    # }
-    # return render(request,'data.html',context)
-    return Response(gsc_search_analytics)
+    df = pd.DataFrame(gsc_search_analytics['rows'])
+    df['keys'] = df['keys'].str.get(0)
+    df['ctr']=df['ctr'].round(2)
+    df['impressions']=df['impressions'].round(2)
+    df['position']=df['position'].round(2)
+    df['clicks']=df['clicks'].round(2)
+    list.append(df)
+    column_names = df.columns.tolist()
+    final_row_data=[]
+    for index ,rows in df.iterrows():
+        print(rows,'rowsrwsrws')
+        final_row_data.append(rows.to_dict())
+    print(column_names,'cccccccccccc')
+    print(final_row_data.append,'rrrrrrrrrr')
+    # return Response(column_names)
+    return Response(final_row_data)
 
+@api_view(['GET'])
+def CSVReaderToJson(request):
+    result_status = 'FAILURE'
+    result_data = []
+    csv_url = gsc_search_analytics
 
+    try:
+        url_content = requests.get(csv_url).content
+        csv_data = pd.read_csv(io.StringIO(url_content.decode('utf-8')))
 
+        row_count = csv_data.shape[0]
+        column_count = csv_data.shape[1]
+        column_names = csv_data.columns.tolist()
+
+        # Option [1]
+        # row_json_data = csv_data.to_json(orient='records')
+
+        # Option [2]
+        final_row_data = []
+        for index, rows in csv_data.iterrows():
+            final_row_data.append(rows.to_dict())
+
+        json_result = {'rows': row_count, 'cols': column_count, 'columns': column_names, 'rowData': final_row_data}
+        result_data.append(json_result)
+        result_status = 'SUCCESS'
+    except:
+        result_data.append({'message': 'Unable to process the request.'})
+
+    return Response(result_status, result_data)
 
 
 
@@ -452,7 +490,11 @@ def pie_chart(request):
 
 
 
-
+class ProfileDataAPI(generics.GenericAPIView):
+    def get(self,request,*args,**kwargs):
+        data=Profile.objects.all().values()
+        print(type(data),'ddddddddddd')
+        return Response(data)
 
 
 

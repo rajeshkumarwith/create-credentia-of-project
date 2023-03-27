@@ -3,9 +3,9 @@ version: '3'
 services:
   web:
     build: .
-    command: python manage.py runserver 0.0.0.0:7000
+    command: python manage.py runserver 0.0.0.0:7001
     ports:
-     - 7000:7000
+     - 7001:7001
 
 
 
