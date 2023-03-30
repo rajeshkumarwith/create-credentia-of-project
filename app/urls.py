@@ -4,6 +4,11 @@ from app import views
 from .views import *
 # from app import ranks
 # from .ranks import *
+from rest_framework import routers
+
+router=routers.DefaultRouter()
+router.register('profile',views.ProfileAPIView, basename='profile')
+
 
 urlpatterns=[
     path('api/token/', jwt_views.TokenObtainPairView.as_view(), name='token_obtain_pair'),
@@ -13,7 +18,6 @@ urlpatterns=[
     path('search',views.data,name='sitemap'),
     path('show',searchdataapiview,name='show'),
     path('searchdata',views.searchdataapi,name='searchdata'),
-    path('profile/',views.ProfileDataAPI.as_view(), name='profile'),
     path('graph/',views.showdataapi.as_view(),name='graph'),
     path('chart/',showchartapi,name='graph'),
     path('plot/',views.plot_png,name='plot'),
@@ -22,9 +26,10 @@ urlpatterns=[
     path('mpl',mpl,name='mpl'),
     path('d/',DataAPIView.as_view(),name='datad'),
     path('pie/',pie_chart,name='pie'),
-    path('csv/',CSVReaderToJson,name='csv')
+    path('country/',GetCountryAPI,name='country'),
+    path('device/',GetDeviceAPI,name='device'),
 
-]
+] + router.urls
 
 
 
