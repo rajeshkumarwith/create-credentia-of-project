@@ -7,7 +7,7 @@ from .views import *
 from rest_framework import routers
 
 router=routers.DefaultRouter()
-router.register('profile',views.ProfileAPIView, basename='profile')
+router.register('kewords',views.ProfileAPIView, basename='profile')
 
 
 urlpatterns=[
@@ -15,7 +15,7 @@ urlpatterns=[
     path('api/token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
     path('hello/', views.HelloView.as_view(), name='hello'),
     path('data/',views.searchdata,name='search'),
-    path('search',views.data,name='sitemap'),
+    path('page/',views.PageAPI,name='sitemap'),
     path('show',searchdataapiview,name='show'),
     path('searchdata',views.searchdataapi,name='searchdata'),
     path('graph/',views.showdataapi.as_view(),name='graph'),

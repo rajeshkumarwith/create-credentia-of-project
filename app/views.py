@@ -226,7 +226,7 @@ def GetDeviceAPI(request):
 
 
 @api_view(['GET'])
-def data(request):
+def PageAPI(request):
     scopes = ['https://www.googleapis.com/auth/webmasters']
     service = gsc_auth(scopes)
     sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:hptourtravel.com').execute()
