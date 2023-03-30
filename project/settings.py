@@ -62,6 +62,7 @@ MIDDLEWARE = [
 ]
 CORS_ORIGIN_WHITELIST = [
     'http://localhost:3000',
+    'http://psd2htmlx.com:5050'
 ]
 
 ROOT_URLCONF = 'project.urls'
