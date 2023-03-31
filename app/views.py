@@ -182,7 +182,15 @@ def GetCountryAPI(request):
             # device = row['keys']
             output_row = [ country,  row['clicks'], row['impressions'], row['ctr'], row['position']]
             output_rows.append(output_row)
+    if "rows" in response:
+        df['country'] =response["rows"][1]["keys"][1]
     df = pd.DataFrame(output_rows, columns=['country', 'clicks', 'impressions', 'ctr','position'])
+    # df['country']=df['country'].str.get('country')
+    # df['country']=df['country'].str.get(0)
+    df['country']=df['country'].str.capitalize()
+    df['ctr']=df['ctr'].round(2)
+    df['position']=df['position'].round(2)
+    df['impressions']=df['impressions'].round(2)
     final_row_data=[]
     for index ,rows in df.iterrows():
         final_row_data.append(rows.to_dict())
@@ -218,6 +226,11 @@ def GetDeviceAPI(request):
             output_row = [ device,  row['clicks'], row['impressions'], row['ctr'], row['position']]
             output_rows.append(output_row)
     df = pd.DataFrame(output_rows, columns=['device', 'clicks', 'impressions', 'ctr','position'])
+    df['device'] = df['device'].apply(lambda x: df[x] if x in df['device'] else x)
+    df['device']=df['device'].str.capitalize()
+    df['ctr']=df['ctr'].round(2)
+    df['position']=df['position'].round(2)
+    df['impressions']=df['impressions'].round(2)
     final_row_data=[]
     for index ,rows in df.iterrows():
         final_row_data.append(rows.to_dict())
@@ -254,7 +267,55 @@ def PageAPI(request):
             output_row = [ page,  row['clicks'], row['impressions'], row['ctr'], row['position']]
             output_rows.append(output_row)
     df = pd.DataFrame(output_rows, columns=['page', 'clicks', 'impressions', 'ctr','position'])
+    df['ctr']=df['ctr'].round(2)
+    df['position']=df['position'].round(2)
+    df['impressions']=df['impressions'].round(2)
     final_row_data=[]
+    for index ,rows in df.iterrows():
+        final_row_data.append(rows.to_dict())
+    # return Response(output_rows)
+    return Response(final_row_data)
+
+import datetime
+
+@api_view(['GET'])
+def DateAPI(request):
+    scopes = ['https://www.googleapis.com/auth/webmasters']
+    service = gsc_auth(scopes)
+    sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:hptourtravel.com').execute()
+    service = gsc_auth(scopes)
+    list=[]
+    start_date = datetime.date(2022, 1, 1)
+    end_date = datetime.date(2022, 3, 31)
+    request = {
+        "startDate": start_date.isoformat(),
+        "endDate": end_date.isoformat(),
+        "dimensions": [
+        "query"
+    ],
+    "rowLimit": 25000
+    }
+    gsc_search_analytics = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
+    df = pd.DataFrame(gsc_search_analytics['rows'])
+    response = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
+    rows = response['rows']
+    data = []
+    for row in response['rows']:
+        date_str = row['keys'][0]
+        clicks = row['clicks']
+        ctr = row['ctr']
+        print(date_str,'datestrster')
+        date = datetime.datetime.strptime(start_date, '%Y-%m-%d').date()
+        data.append({
+            'date': date.isoformat(),
+            'clicks': clicks,
+         'ctr': ctr
+        })
+        # data.append([keys[0], clicks, impressions, ctr, position])
+    df = pd.DataFrame(data, columns=['Query', 'Clicks', 'Impressions', 'CTR', 'Position'])
+    final_row_data=[]
+    df['CTR']=df['CTR'].round(2)
+    df['Position']=df['Position'].round(2)
     for index ,rows in df.iterrows():
         final_row_data.append(rows.to_dict())
     # return Response(output_rows)
@@ -550,11 +611,14 @@ def searchdataapi(request):
         'df_rec': df.to_dict(orient='records')
         }
   return render(request,'show.html',context)
+from django.utils import timezone
 
 class ProfileAPIView(viewsets.ModelViewSet):
     serializer_class=ProfileDataSerializer
     pagination_class = CustomPagination
     def get_queryset(self):
+        #  startdate = timezone.now() - datetime.timedelta(days=7)
+        # enddate = timezone.now()
         scopes = ['https://www.googleapis.com/auth/webmasters']
         service = gsc_auth(scopes)
         sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:hptourtravel.com').execute()
@@ -652,4 +716,11 @@ class Foo(viewsets.ViewSet):
         queryset = Profile.objects.all()
         serializer = ProfileSerailizer(queryset, many=True)
         return Response(serializer.data)
+
+
+class DataAPI(generics.GenericAPIView):
+    def get(self,request,*args,**kwargs):
+        d= {'Column':[1,2,3,4,5,'Welcome to IncludeHelp, You are learning how to print a long string.']}
+        return Response(d)
+
 

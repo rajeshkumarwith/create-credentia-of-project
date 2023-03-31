@@ -28,6 +28,7 @@ urlpatterns=[
     path('pie/',pie_chart,name='pie'),
     path('country/',GetCountryAPI,name='country'),
     path('device/',GetDeviceAPI,name='device'),
+    path('date/',DateAPI,name='date')
 
 ] + router.urls
 
