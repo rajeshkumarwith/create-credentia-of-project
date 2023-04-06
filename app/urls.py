@@ -7,7 +7,8 @@ from .views import *
 from rest_framework import routers
 
 router=routers.DefaultRouter()
-router.register('kewords',views.ProfileAPIView, basename='profile')
+router.register('kewords',views.TopqueriesAPI, basename='profile')
+router.register('pages',views.TopPageAPI,basename='page')
 
 
 urlpatterns=[
@@ -18,17 +19,25 @@ urlpatterns=[
     path('page/',views.PageAPI,name='sitemap'),
     path('show',searchdataapiview,name='show'),
     path('searchdata',views.searchdataapi,name='searchdata'),
-    path('graph/',views.showdataapi.as_view(),name='graph'),
     path('chart/',showchartapi,name='graph'),
     path('plot/',views.plot_png,name='plot'),
     path('figure/',create_figure,name='figure'),
     path('figuredata/',figure,name='figure'),
     path('mpl',mpl,name='mpl'),
     path('d/',DataAPIView.as_view(),name='datad'),
-    path('pie/',pie_chart,name='pie'),
     path('country/',GetCountryAPI,name='country'),
     path('device/',GetDeviceAPI,name='device'),
-    path('date/',DateAPI,name='date')
+    path('date/<str:start_date>/<str:end_date>/',DateAPI.as_view(),name='date'),
+  
+    # path('filter/<str:start_date>/<str:end_date>/',DateFilter.as_view(),name='data'),
+    path('filter/',DateFilter.as_view(),name='filter')
+    
+
+   
+    
+
+    #  path('users/<str:username>/', UserProfileAPIView.as_view(), name='user-profile'),
+
 
 ] + router.urls
 

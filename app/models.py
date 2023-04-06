@@ -7,6 +7,8 @@ class Profile(models.Model):
     username=models.CharField(max_length=100,blank=True,null=True)
     email=models.EmailField()
     mobile=models.CharField(max_length=20,blank=True,null=True)
+    start_time=models.TimeField()
+    end_time=models.TimeField()
 
 
     
