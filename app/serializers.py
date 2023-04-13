@@ -17,20 +17,29 @@ class ProfileDataSerializer(serializers.Serializer):
     position=serializers.IntegerField()
     clicks=serializers.IntegerField()
 
+
+class  ProfiledataSerializer(serializers.Serializer):
+    query=serializers.CharField(max_length=100)
+    page=serializers.CharField(max_length=100)
+    country=serializers.CharField(max_length=100)
+    device=serializers.CharField(max_length=100)
+    ctr=serializers.IntegerField()
+    position=serializers.IntegerField()
+    
+
 class PageDataSerializer(serializers.Serializer):
     page=serializers.CharField(max_length=500)
     ctr=serializers.IntegerField()
     impressions=serializers.IntegerField()
     position=serializers.IntegerField()
     clicks=serializers.IntegerField()
+    
 class UserSerializer(serializers.Serializer):
     class Meta:
         model=User
         fields=('url','username','email','groups')
 
 
-# class ProfiledataSerializer(serializers.Serializer):
-#     id=serializers.IntegerField()
 
 from rest_framework import serializers
 from django.contrib.auth.models import User

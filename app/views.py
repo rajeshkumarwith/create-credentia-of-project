@@ -12,6 +12,7 @@ from rest_framework.decorators import api_view,permission_classes
 import requests
 from .paginations import *
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import AllowAny
 
 class HelloView(APIView):
     def get(self, request):
@@ -86,7 +87,7 @@ from google.oauth2.credentials import Credentials
 # 'credentials.json'={"installed":{"client_id":"695543285061-mnt3b45di36ua2pugvthvadbqabnijo8.apps.googleusercontent.com","project_id":"hptourtravel1","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_secret":"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","redirect_uris":["http://localhost"]}}
 CURR_DIR ='/home/ocode-22/Documents/dockerwithdjango/project'
 TOKEN_DIR='/home/ocode-22/Documents/dockerwithdjango/project/TOKEN_FILE'
-
+# CURR_DIR ='/home/ocode-22/Documents/google search api/project/app/credentials.json'
 def gsc_auth(scopes):
     creds = None
     # The file token.json stores the user's access and refresh tokens, and is
@@ -981,3 +982,64 @@ def my_data(request, page_url):
     data = [{'query': row['keys'][0], 'clicks': row['clicks'], 'impressions': row['impressions']} for row in response['rows']]
     # Return the serialized data
     return Response(data)
+
+
+
+
+class QueryAPI(APIView):
+    def get(self,request,*args,**kwags):
+        try:
+            country=self.request.query_params.get('country')
+            device=self.request.query_params.get('device')
+            page=self.request.query_params.get('page')
+            project=self.request.query_params.get('project')
+            scopes = ['https://www.googleapis.com/auth/webmasters']
+            service = gsc_auth(scopes)
+            sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:' + str(project)).execute()
+            service = gsc_auth(scopes)
+            list=[]
+            print(service,'sssssssssss')
+            request = {
+                "startDate": "2022-03-01",
+                "endDate":"2022-03-15",
+                "dimensions": ['query', 'country', 'device', 'page'],
+            "rowLimit": 25000
+            }
+            # gsc_search_analytics = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
+            # df = pd.DataFrame(gsc_search_analytics['rows'])
+            response = service.searchanalytics().query(siteUrl='sc-domain:' +str(project), body=request).execute()
+            df=pd.DataFrame(response['rows'])
+            # list=[]
+            data=[]
+            for row in response['rows']:
+                query=row['keys'][0]
+                # country=row['keys'][1]
+                # device=row['keys'][2]
+                # page=row['keys'][3]
+                clicks=row['clicks']
+                ctr=row['ctr']
+                impressions=row['impressions']
+                position=row['position']
+                data.append({
+                    'query':query,
+                    # 'country':country,
+                    # 'device':device,
+                    # 'page':page,
+                    'clicks':clicks,
+                    'ctr':ctr,
+                    'impressions':impressions,
+                    'position':position
+                })
+            # df = pd.DataFrame(data, columns=['page', 'clicks', 'impressions', 'ctr','position'])
+            df=pd.DataFrame(data)
+            df['ctr']=df['ctr'].round(2)
+            df['position']=df['position'].round(2)
+            df['impressions']=df['impressions'].round(2)
+            final_row_data=[]
+            for index ,rows in df.iterrows():
+                final_row_data.append(rows.to_dict())
+            return Response(final_row_data)
+        except:
+            content={'msg':'Project Not Found'}
+            return Response(content,status=status.HTTP_404_NOT_FOUND)
+       

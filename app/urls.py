@@ -27,16 +27,13 @@ urlpatterns=[
     path('d/',DataAPIView.as_view(),name='datad'),
     path('country/',GetCountryAPI,name='country'),
     path('device/',GetDeviceAPI,name='device'),
-    path('date/<str:start_date>/<str:end_date>/',DateAPI.as_view(),name='date'),
-  
-    # path('filter/<str:start_date>/<str:end_date>/',DateFilter.as_view(),name='data'),
-    path('filter/',DateFilter.as_view(),name='filter')
+    path('date/',DateAPI.as_view(),name='date'),
+    path('filter/',DateFilter.as_view(),name='filter'),
+    path('api/',QueryAPI.as_view(),name='api')
     
 
    
     
-
-    #  path('users/<str:username>/', UserProfileAPIView.as_view(), name='user-profile'),
 
 
 ] + router.urls
