@@ -19,4 +19,14 @@ class Friend(models.Model):
     DateAdded=models.DateTimeField(blank=True,null=True)
 
 
+from django.db import models
+from allauth.socialaccount.models import SocialApp
+
+class SearchConsoleCredential(models.Model):
+    social_app = models.ForeignKey(SocialApp, on_delete=models.CASCADE)
+    access_token = models.CharField(max_length=200)
+    refresh_token = models.CharField(max_length=200)
+    token_uri = models.CharField(max_length=200)
+    expires_at = models.DateTimeField()
+
 

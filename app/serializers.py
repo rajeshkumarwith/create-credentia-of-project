@@ -9,9 +9,9 @@ class  ProfileSerailizer(serializers.Serializer):
 
 class ProfileDataSerializer(serializers.Serializer):
     query=serializers.CharField(max_length=1000)
-    # country=serializers.CharField(max_length=100)
-    # device=serializers.CharField(max_length=100)
-    # page=serializers.CharField(max_length=500)
+    country=serializers.CharField(max_length=100)
+    device=serializers.CharField(max_length=100)
+    page=serializers.CharField(max_length=500)
     ctr=serializers.IntegerField()
     impressions=serializers.IntegerField()
     position=serializers.IntegerField()
