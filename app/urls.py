@@ -31,7 +31,7 @@ urlpatterns=[
     path('filter/',DateFilter.as_view(),name='filter'),
     path('api/',QueryAPI.as_view(),name='api'),
     # path('auth/',GoogleSearchConsoleAPIView.as_view(),name='auth'),
-    path('auth/',GoogleSearchConsoleAPIView.as_view(),name='auth')
+    # path('auth/',GoogleSearchConsoleAPIView.as_view(),name='auth')
     
 
    
