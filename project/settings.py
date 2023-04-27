@@ -44,6 +44,13 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
+    'django_filters',
+    'oauth2_provider',
+    'social_django',
+    'drf_social_oauth2',
+    'rest_framework.authtoken',
+    'rest_auth',
+    
 
 ]
 
@@ -52,6 +59,20 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend'
 ]
+SOCIALACCOUNT_LOGIN_ON_GET=True
+
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        }
+    }
+}
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'SCOPE': [
@@ -64,19 +85,63 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
-SITE_ID = 1
+AUTH_USER_MODEL = 'app.User'
 
+
+SITE_ID = 1
+LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
+
 LOGOUT_REDIRECT_URL = '/'
 
+
+# REST_FRAMEWORK = {
+#     'DEFAULT_AUTHENTICATION_CLASSES': [
+#         'rest_framework_simplejwt.authentication.JWTAuthentication',
+#     ],
+#    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+#    'PAGE_SIZE': 100,
+#    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema' 
+# }
+
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ],
-   'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-   'PAGE_SIZE': 100,
-   'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema' 
+      'DEFAULT_AUTHENTICATION_CLASSES': (
+        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+        'drf_social_oauth2.authentication.SocialAuthentication',
+      )
 }
+AUTHENTICATION_BACKENDS = (
+   'social_core.backends.google.GoogleOAuth2',
+   'drf_social_oauth2.backends.DjangoOAuth2',
+   'django.contrib.auth.backends.ModelBackend',
+)
+# ACCOUNT_AUTHENTICATION_METHOD = 'email'
+# ACCOUNT_EMAIL_VERIFICATION = 'none'
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'APP': {
+            'client_id': '286943146870-h21okc0jtogcva4mrmi28h4fpkcaagum.apps.googleusercontent.com',
+            'secret': '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',
+            'key': ''
+        }
+    }
+}
+GOOGLE_CLIENT_ID = '286943146870-h21okc0jtogcva4mrmi28h4fpkcaagum.apps.googleusercontent.com'
+SOCIAL_SECRET = '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'
+SITE_ID = 1
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '286943146870-3n2anft2m2ths4lkdfk5a0qh1mld70sf.apps.googleusercontent.com'
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET ='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'
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
+    'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/userinfo.profile',
+]
+
+
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -87,11 +152,13 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
     
 ]
 CORS_ORIGIN_WHITELIST = [
     'http://localhost:3000',
-    'http://psd2htmlx.com:5050'
+    'http://psd2htmlx.com:5050',
+    'https://accounts.google.com'
 ]
 
 ROOT_URLCONF = 'project.urls'
@@ -107,6 +174,8 @@ TEMPLATES = [
             'django.contrib.auth.context_processors.auth',
             'django.contrib.messages.context_processors.messages',
             'django.template.context_processors.request',
+            'social_django.context_processors.backends',
+            'social_django.context_processors.login_redirect',
 
         ],
     },

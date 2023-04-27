@@ -933,6 +933,26 @@ class TopqueriesAPI(viewsets.ModelViewSet):
        
 from rest_framework import status
 
+# class  DomainVerify(APIView):
+#     def get(self,request,*args,**kwargs):
+#         scopes = ['https://www.googleapis.com/auth/webmasters']
+#         service = gsc_auth(scopes)
+#         project=self.request.query_params.get('project')
+#         sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:'+str(project)).execute()
+#         service = gsc_auth(scopes)
+#         list=[]
+#         print(service,'sssssssssss')
+#         request = {
+#             "startDate": "2022-03-01",
+#             "endDate": "2022-03-15",
+#             "dimensions": ['query', 'country', 'device', 'page'],
+#         "rowLimit": 25000
+#             }
+#         response = service.searchanalytics().query(siteUrl='sc-domain:'+str(project), body=request).execute()
+#         df=pd.DataFrame(response['rows'])
+#         if df is not None:
+#             # return Response(status=status.HTTP_200_OK)
+#             return Response(df)
 
 
 import re
@@ -983,7 +1003,75 @@ class  DomainVerify(APIView):
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)   
 
-      
+        
+class  VerifyQuery(APIView):
+    def get(self,request,*args,**kwargs):
+        try:
+            scopes = ['https://www.googleapis.com/auth/webmasters']
+            service = gsc_auth(scopes)
+            project=self.request.query_params.get('project')
+            query=self.request.query_params.get('query')
+            if not query:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:'+str(project)).execute()
+            service = gsc_auth(scopes)
+            list=[]
+            print(service,'sssssssssss')
+            request = {
+                "startDate": "2022-03-01",
+                "endDate": "2022-03-15",
+                "dimensions": ['query', 'country', 'device', 'page'],
+            "rowLimit": 25000
+                }
+            response = service.searchanalytics().query(siteUrl='sc-domain:'+str(project), body=request).execute()
+            df=pd.DataFrame(response['rows'])
+            data=[]
+            for row in response['rows']:
+                query=row['keys'][0]
+                clicks=row['clicks']
+                ctr=row['ctr']
+                impressions=row['impressions']
+                position=row['position']
+                data.append({
+                    'query':query,
+                    'clicks':clicks,
+                    'ctr':ctr,
+                    'impressions':impressions,
+                    'position':position
+                })
+            # df = pd.DataFrame(data, columns=['page', 'clicks', 'impressions', 'ctr','position'])
+            df=pd.DataFrame(data)
+            df['ctr']=df['ctr'].round(2)
+            df['position']=df['position'].round(2)
+            df['impressions']=df['impressions'].round(2)
+            final_row_data=[]
+            for index ,rows in df.iterrows():
+                final_row_data.append(rows.to_dict())
+            if df is not None:
+                # return Response(status=status.HTTP_200_OK)
+                return Response(final_row_data)
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST)   
+
+# class DomainVerify(viewsets.ModelViewSet):
+#     def get_queryset(self):
+#         scopes = ['https://www.googleapis.com/auth/webmasters']
+#         service = gsc_auth(scopes)
+#         project=self.request.query_params.get('project')
+#         sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:'+str(project)).execute()
+#         service = gsc_auth(scopes)
+#         list=[]
+#         print(service,'sssssssssss')
+#         request = {
+#             "startDate": "2022-03-01",
+#             "endDate": "2022-03-15",
+#             "dimensions": ['query', 'country', 'device', 'page'],
+#         "rowLimit": 25000
+#             }
+#         response = service.searchanalytics().query(siteUrl='sc-domain:'+str(project), body=request).execute()
+#         df=pd.DataFrame(response['rows'])
+#         if df is not None:
+#             return 
        
 class TopPageAPI(viewsets.ModelViewSet):
     serializer_class=PageDataSerializer
@@ -1118,47 +1206,367 @@ class QueryAPI(generics.ListCreateAPIView):
                 final_row_data.append(rows.to_dict())
             return Response(final_row_data)
         except:
+            # country=self.request.query_params.get('country')
+            # device=self.request.query_params.get('device')
+            # page=self.request.query_params.get('page')
+            # scopes = ['https://www.googleapis.com/auth/webmasters']
+            # service = gsc_auth(scopes)
+            # sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:hptourtravel.com').execute()
+            # service = gsc_auth(scopes)
+            # list=[]
+            # print(service,'sssssssssss')
+            # request = {
+            #     "startDate": "2022-03-01",
+            #     "endDate":"2022-03-15",
+            #     "dimensions": ['query', 'country', 'device', 'page'],
+            # "rowLimit": 25000
+            # }
+            # # gsc_search_analytics = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
+            # # df = pd.DataFrame(gsc_search_analytics['rows'])
+            # response = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
+            # df=pd.DataFrame(response['rows'])
+            # # list=[]
+            # data=[]
+            # for row in response['rows']:
+            #     query=row['keys'][0]
+            #     country=row['keys'][1]
+            #     device=row['keys'][2]
+            #     page=row['keys'][3]
+            #     clicks=row['clicks']
+            #     ctr=row['ctr']
+            #     impressions=row['impressions']
+            #     position=row['position']
+            #     data.append({
+            #         'query':query,
+            #         'country':country,
+            #         'device':device,
+            #         'page':page,
+            #         'clicks':clicks,
+            #         'ctr':ctr,
+            #         'impressions':impressions,
+            #         'position':position
+            #     })
+            # # df = pd.DataFrame(data, columns=['page', 'clicks', 'impressions', 'ctr','position'])
+            # df=pd.DataFrame(data)
+            # df['ctr']=df['ctr'].round(2)
+            # df['position']=df['position'].round(2)
+            # df['impressions']=df['impressions'].round(2)
+            # final_row_data=[]
+            # for index ,rows in df.iterrows():
+            #     final_row_data.append(rows.to_dict())
             
             return Response(None)
         
+# class QueryAPI(viewsets.ModelViewSet):
+#     serializer_class=ProfileDataSerializer
+#     pagination_class = CustomPagination
+#     def get_queryset(self):
+#         try:
+#             project=self.request.query_params.get('project')
+#             country=self.request.query_params.get('country')
+#             device=self.request.query_params.get('device')
+#             page=self.request.query_params.get('page')
+#             scopes = ['https://www.googleapis.com/auth/webmasters']
+#             service = gsc_auth(scopes)
+#             sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:' + str(project)).execute()
+#             if not sals_sitemaps:
+#                 pass
+#             service = gsc_auth(scopes)
+#             list=[]
+#             print(service,'sssssssssss')
+#             request = {
+#                 "startDate": "2022-03-01",
+#                 "endDate": "2022-03-15",
+#                 "dimensions": ['query', 'country', 'device', 'page'],
+#             "rowLimit": 25000
+#             }
+#             response = service.searchanalytics().query(siteUrl='sc-domain:' + str(project), body=request).execute()
+#             if not response:
+#                 pass
+#             df=pd.DataFrame(response['rows'])
+#             if not df:
+#                 pass
+#             # list=[]
+#             data=[]
+#             for row in response['rows']:
+#                 query=row['keys'][0]
+#                 # country=row['keys'][1]
+#                 # device=row['keys'][2]
+#                 # page=row['keys'][3]
+#                 clicks=row['clicks']
+#                 ctr=row['ctr']
+#                 impressions=row['impressions']
+#                 position=row['position']
+#                 data.append({
+#                     'query':query,
+#                     # 'country':country,
+#                     # 'device':device,
+#                     # 'page':page,
+#                     'clicks':clicks,
+#                     'ctr':ctr,
+#                     'impressions':impressions,
+#                     'position':position
+#                 })
+#             # df = pd.DataFrame(data, columns=['page', 'clicks', 'impressions', 'ctr','position'])
+#             df=pd.DataFrame(data)
+#             df['ctr']=df['ctr'].round(2)
+#             df['position']=df['position'].round(2)
+#             df['impressions']=df['impressions'].round(2)
+#             final_row_data=[]
+#             for index ,rows in df.iterrows():
+#                 final_row_data.append(rows.to_dict())
+#             return final_row_data
+#         except:
+#             data=User.objects.all().values()
+#             if not data:
+#                 pass
+#             return data
 
-# from google.oauth2.credentials import Credentials
-# from google_auth_oauthlib.flow import InstalledAppFlow
 
-# CLIENT_SECRET_FILE = '/home/ocode-22/Documents/dockerwithdjango/project/credentials.json'
-# API_NAME = 'searchconsole'
-# API_VERSION = 'v1'
 
-# # Set up the credentials flow
-# flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRET_FILE, scopes=['https://www.googleapis.com/auth/webmasters.readonly'])
-# creds = flow.run_local_server(port=0)
-# creds_dict = {
-#     'token': creds.token,
-#     'refresh_token': creds.refresh_token,
-#     'id_token': creds.id_token,
-#     'token_uri': creds.token_uri,
-#     'client_id': creds.client_id,
-#     'client_secret': creds.client_secret,
-#     'scopes': creds.scopes
-# }
-# creds = Credentials.from_authorized_user_info(creds_dict)
 
-from googleapiclient.discovery import build
-from datetime import datetime
 
+
+
+
+
+
+
+
+    
+
+
+# # Create your views here.
+
+# class HelloView(APIView):
+#     permission_classes = (IsAuthenticated,)
+#     def get(self, request):
+#         content = {'message': 'Hello, World!'}
+#         return Response(content)
+
+
+from django.contrib.auth import get_user_model
+User = get_user_model()
+
+class RegisterUserAPIView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    permission_classes = (AllowAny,)
+    serializer_class = RegisterSerializer
+
+
+
+# class RegisterUserAPIView(generics.GenericAPIView):
+#     def get(self,request,*args,**kwargs):
+#         return Response({'msg':'login succssfully','status':200})
+
+
+class LoginApi(generics.GenericAPIView):
+    permission_classes = (AllowAny,)
+    serializer_class = LoginSerializer
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.data
+        email = data['email']
+        password = data['password']
+
+        try:
+            user = User.objects.get(email = email)
+            validate = check_password(password, user.password)
+            if validate:
+                token = str(RefreshToken.for_user(user))
+                access = str(RefreshToken.for_user(user).access_token)
+                return Response({
+                "user": UserSerializer(user, context=self.get_serializer_context()).data,
+                "access": access,
+                "refresh": token,
+
+                })
+            else:
+                content = {"detail": "Password Do not Match"}
+                return Response(content, status=status.HTTP_404_NOT_FOUND)
+        except:
+            content = {"detail": "No active account found with the given credentials"}
+            return Response(content, status=status.HTTP_404_NOT_FOUND)
+
+
+
+
+class ResetPasswordAppAPI(generics.GenericAPIView):
+    permission_classes = (AllowAny,)
+    # permission_classes = (IsAuthenticated,)
+    def post(self, request):
+        # User_id=self.request.user
+        email=request.data['email']
+        # User_id=request.data['User_id']
+        u=User.objects.get(email=email)
+        # password=request.data['password']
+        pwd=str(request.data['password'])
+        u.set_password(pwd)
+        u.save()
+        return Response({
+            "msg":'Your password is changed successfully.',
+            "status":200
+        })  
+
+
+
+# class AllUsersAPI(generics.GenericAPIView):
+#     permission_classes = (AllowAny,)
+#     def get(self,reqeust,*args):
+#         email = self.request.query_params.get('email')
+#         data=User.objects.filter(email=email).values('email')
+#         if not data:
+#             pass
+#             # return Response({'msg':'User Not Found','status':400})
+#         return Response(data)
+    
+
+
+# from rest_framework import viewsets, filters
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
-class DynamicSearchFilter(filters.SearchFilter):
-    def get_search_fields(self, view, request):
-        return request.GET.getlist('search_fields', [])
 
-class SearchDataApi(generics.ListCreateAPIView):
-    filter_backends = (DynamicSearchFilter,)
-    serializer_class=QueryRelatedSerializer
-    def get(self,request,*args,**kwags):
+class ProjectModelViewSet(viewsets.ModelViewSet):
+    pagination_class = CustomPagination
+    queryset = Project.objects.all()
+    serializer_class = ProjectSerializer
+    filter_backends = [DjangoFilterBackend,filters.SearchFilter]
+    search_fields = ['name', 'slug']
+    filterset_fields = ['name','slug' ]
+
+   
+
+class CheckListAPI(viewsets.ModelViewSet):
+    pagination_class = CustomPagination
+    serializer_class=CheckListSerializer
+    queryset=CheckList.objects.all()
+    filter_backends = [DjangoFilterBackend,filters.SearchFilter]
+    search_fields = ['name', 'is_completed']
+    filterset_fields = ['is_completed', ]
+ 
+    
+from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
+from allauth.socialaccount.providers.oauth2.client import OAuth2Client
+from rest_auth.registration.views import SocialLoginView
+
+class GoogleLogin(SocialLoginView):
+    adapter_class = GoogleOAuth2Adapter
+    client_class = OAuth2Client
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
+  
+  
+class HomeView(APIView):
+    permission_classes = (AllowAny, )
+  
+    def get(self, request):
+        content = {'message': 'Welcome to the Social Authentication (Email) page using React Js and Django!'}
+        return Response(content)
+    
+
+from allauth.socialaccount.providers.facebook.views import FacebookOAuth2Adapter
+from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
+from dj_rest_auth.registration.views import SocialLoginView
+
+
+class FacebookLogin(SocialLoginView):
+    adapter_class = FacebookOAuth2Adapter
+
+
+class GoogleLogin(SocialLoginView):
+    adapter_class = GoogleOAuth2Adapter
+
+
+
+
+
+from rest_framework.authtoken.models import Token
+
+from .models import User
+from django.conf import settings
+from rest_framework.exceptions import AuthenticationFailed
+
+
+def register_social_user(provider, user_id, email, name):
+    filtered_user_by_email = User.objects.filter(email=email)
+
+    if filtered_user_by_email.exists():
+        if provider == filtered_user_by_email[0].auth_provider:
+            new_user = User.objects.get(email=email)
+
+            registered_user = User.objects.get(email=email)
+            registered_user.check_password(settings.SOCIAL_SECRET)
+
+            Token.objects.filter(user=registered_user).delete()
+            Token.objects.create(user=registered_user)
+            new_token = list(Token.objects.filter(
+                user_id=registered_user).values("key"))
+
+            return {
+                'username': registered_user.username,
+                'email': registered_user.email,
+                'tokens': str(new_token[0]['key'])}
+
+        else:
+            raise AuthenticationFailed(
+                detail='Please continue your login using ' + filtered_user_by_email[0].auth_provider)
+
+    else:
+        user = {
+            'username': email, 'email': email,
+            'password': settings.SOCIAL_SECRET
+        }
+        user = User.objects.create_user(**user)
+        user.is_active = True
+        user.auth_provider = provider
+        user.save()
+        new_user = User.objects.get(email=email)
+        new_user.check_password(settings.SOCIAL_SECRET)
+        Token.objects.create(user=new_user)
+        new_token = list(Token.objects.filter(user_id=new_user).values("key"))
+        return {
+            'email': new_user.email,
+            'username': new_user.username,
+            'tokens': str(new_token[0]['key']),
+        }
+
+
+import json
+import requests
+from django.conf import settings
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+import jwt
+
+@api_view(['POST'])
+def google_login(request):
+    google_token = request.data.get('token')
+    try:
+        id_info = id_token.verify_oauth2_token(google_token, google_requests.Request(), settings.GOOGLE_CLIENT_ID)
+        email = id_info['email']
+        username = email.split('@')[0]
+        payload = {
+            'username': username,
+            'email': email,
+        }
+        jwt_token = jwt.encode(payload, settings.SECRET_KEY)
+        return Response({'token': jwt_token})
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class SearchConsoleAPIView(APIView):
+    def get(self,request,*args,**kwargs):
             project=self.request.query_params.get('project')
-            query=request.GET.get('q','')
-            # if not query:
-            #     return Response(status=status.HTTP_400_BAD_REQUEST)
+            query=self.request.query_params.get('query')
             scopes = ['https://www.googleapis.com/auth/webmasters']
             service = gsc_auth(scopes)
             sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:' + str(project)).execute()
@@ -1166,78 +1574,347 @@ class SearchDataApi(generics.ListCreateAPIView):
             list=[]
             print(service,'sssssssssss')
             request = {
-                'startDate': '2022-01-01',
-                'endDate': '2022-04-30',
-                'dimensions': ['query'],
-                'query': query
-             }
-            # gsc_search_analytics = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
-            # df = pd.DataFrame(gsc_search_analytics['rows'])
-            # response = service.searchanalytics().query(siteUrl='sc-domain:' +str(project), body=request).execute()
-            # df=pd.DataFrame(response['rows'])
-            response = service.searchanalytics().query(siteUrl='sc-domain:' + str(project), body=request).execute()
-            # print(df.head(),'hhhhhhhh')
-            output_rows=[]
-            # for row in response['rows']:
-            #     # query=self.request.query_params.get('query')
-            #     # query=row['keys'][0]
-            #     output_row = [ query,  row['clicks'], row['impressions'], row['ctr'], row['position']]
-            #     output_rows.append(output_row)
-            # df = pd.DataFrame(output_rows, columns=['query', 'clicks', 'impressions', 'ctr','position'])
-            # df['ctr']=df['ctr'].round(2)
-            # df['position']=df['position'].round(2)
-            # df['impressions']=df['impressions'].round(2)
-            # final_row_data=[]
-            # for index ,rows in df.iterrows():
-            #     final_row_data.append(rows.to_dict())
+            'startDate': "2022-03-01",
+            'endDate': "2022-04-01",
+            'dimensions': ['query'],
+            'dimensionFilterGroups': [{
+            'filters': [{
+                'dimension': 'country',
+                'expression': 'ind'
+            }]
+            }],
+            'rowLimit': 10
+            }
+            response = service.searchanalytics().query(siteUrl='sc-domain:' +str(project), body=request).execute()
+            df=pd.DataFrame(response['rows'])
+            # list=[]
+            data=[]
             for row in response['rows']:
                 query=query
-                output_row = [ query,  row['clicks'], row['impressions'], row['ctr'], row['position']]
-                output_rows.append(output_row)
-            df=pd.DataFrame(output_row, columns=['query', 'clicks', 'impressions', 'ctr','position'])
-            return Response(df)
-            
-        
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
+                clicks=row['clicks']
+                ctr=row['ctr']
+                impressions=row['impressions']
+                position=row['position']
+                data.append({
+                    'query':query,
+                    'clicks':clicks,
+                    'ctr':ctr,
+                    'impressions':impressions,
+                    'position':position
+                })
+            return Response(data)
+    
 
-@api_view(['GET'])
-def search_results(request):
-    query = request.GET.get('q', '')
-    # TODO: perform search using the query parameter
-    return Response({"query": query})
-
+from datetime import datetime, timedelta
+from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from .models import SearchAnalytics
 
-def get_search_performance_data(query):
-    scopes = ['https://www.googleapis.com/auth/webmasters']
-    service = gsc_auth(scopes)
-    sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:hptourtravel.com').execute()
-    service = gsc_auth(scopes)
-    # query=request.query_params.get('query')
-    # Set the search query parameters
-    request = {
-        'startDate': '2022-01-01',
-        'endDate': '2022-04-30',
-        'dimensions': ['query'],
-        'query': query
-    }
+class SearchAnalyticsView(APIView):
+    def get(self, request):
+        
+        credentials = Credentials.from_authorized_user_info(request.user.auth_token)
+        service = build('webmasters', 'v3', credentials=credentials)
+        end_date = datetime.now().date() - timedelta(days=1)
+        start_date = end_date - timedelta(days=7)
+        response = service.searchanalytics().query(
+            siteUrl='sc-domain:hptourtravel.com',
+            body={
+                'startDate': start_date.strftime('%Y-%m-%d'),
+                'endDate': end_date.strftime('%Y-%m-%d'),
+                'dimensions': ['date'],
+                'rowLimit': 1000,
+            }
+        ).execute()
+        for row in response['rows']:
+            date = datetime.strptime(row['keys'][0], '%Y-%m-%d').date()
+            clicks = row['clicks']
+            impressions = row['impressions']
+            ctr = row['ctr']
+            position = row['position']
+            SearchAnalytics.objects.update_or_create(
+                date=date,
+                defaults={
+                    'clicks': clicks,
+                    'impressions': impressions,
+                    'ctr': ctr,
+                    'position': position,
+                }
+            )
+        return Response(status=200)
 
-    # Execute the search analytics query and retrieve the results
-    response = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
-    print(response['rows'],'rrrrrrrrrrrrrrrrrrr')
-    return response['rows'][0]
+from .models import *
+from .serializers import *
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import viewsets, status, generics, filters, views
+from rest_framework.permissions import AllowAny
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.tokens import RefreshToken
+from django_filters.rest_framework import DjangoFilterBackend
+from django.contrib.auth.hashers import check_password
+from django.template.defaultfilters import slugify
+from .paginations import *
+# Create your views here.
 
-@api_view(['GET'])
-def search_results(request):
-    query = request.GET.get('q', '')
-    # query='himachal shakti peeth yatra'
-    search_performance_data = get_search_performance_data(query)
-    return Response({
-        "query": query,
-        "CTR": search_performance_data['ctr'],
-        "clicks": search_performance_data['clicks'],
-        "position": search_performance_data['position'],
-        "impressions": search_performance_data['impressions']
-    })
+class HelloView(APIView):
+    permission_classes = (IsAuthenticated,)
+    def get(self, request):
+        content = {'message': 'Hello, World!'}
+        return Response(content)
+
+
+
+class RegisterUserAPIView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    permission_classes = (AllowAny,)
+    serializer_class = RegisterSerializer
+
+    def create(self, request, *args, **kwargs):
+        responce = super(RegisterUserAPIView, self).create(request, *args, **kwargs)
+        if responce.status_code == 201:
+            user = User.objects.get(pk = responce.data['id'])
+
+            token = str(RefreshToken.for_user(user))
+            access = str(RefreshToken.for_user(user).access_token)
+            return Response({
+            "user": UserSerializer(user, context=self.get_serializer_context()).data,
+            "access": access,
+            "refresh": token,
+
+            }, status = status.HTTP_201_CREATED)
+        return responce
+
+
+
+class Login(generics.GenericAPIView):
+    def post(self,request,*args,**kwargs):
+        return Response({'msg':'login succssfully','status':200})
+
+
+class LoginApi(generics.GenericAPIView):
+    permission_classes = (AllowAny,)
+    serializer_class = LoginSerializer
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.data
+        email = data['email']
+        password = data['password']
+
+        try:
+            user = User.objects.get(email = email)
+            validate = check_password(password, user.password)
+            if validate:
+                token = str(RefreshToken.for_user(user))
+                access = str(RefreshToken.for_user(user).access_token)
+                return Response({
+                "user": UserSerializer(user, context=self.get_serializer_context()).data,
+                "access": access,
+                "refresh": token,
+
+                })
+            else:
+                content = {"detail": "Password Do not Match"}
+                return Response(content, status=status.HTTP_404_NOT_FOUND)
+        except:
+            content = {"detail": "No active account found with the given credentials"}
+            return Response(content, status=status.HTTP_404_NOT_FOUND)
+
+
+
+
+class ResetPasswordAppAPI(generics.GenericAPIView):
+    permission_classes = (AllowAny,)
+    def post(self, request, *args, **kwargs):
+        User_id=self.request.user
+        # User_id=request.data['User_id']
+        u=User.objects.get(id=User_id)
+        pwd=str(request.data['password'])
+        u.set_password(pwd)
+        u.save()
+        return Response({
+            "msg":'Your password is changed successfully.',
+            "status":200
+        })
+
+
+
+class AllUsersAPI(generics.GenericAPIView):
+    permission_classes = (AllowAny,)
+    def get(self,reqeust,*args):
+        email = self.request.query_params.get('email')
+        if not email:
+            da=User.objects.all().values('email')
+            return Response(da)
+        data=User.objects.filter(email=email).values('email')
+        if not data:
+            pass
+        return Response(data)
+
+
+class ProjectModelViewSet(viewsets.ModelViewSet):
+    pagination_class = CustomPagination
+    queryset = Project.objects.all()
+    serializer_class = ProjectSerializer
+    filter_backends = [DjangoFilterBackend,filters.SearchFilter]
+    search_fields = ['name', 'slug' ,'user__first_name']
+    filterset_fields = ['name','slug', 'user']
+
+class CheckListAPI(viewsets.ModelViewSet):
+    pagination_class = CustomPagination
+    serializer_class=CheckListSerializer
+    queryset=CheckList.objects.all()
+    filter_backends = [DjangoFilterBackend,filters.SearchFilter]
+    search_fields = ['name', 'is_completed']
+    filterset_fields = ['is_completed', ]
+
+class CreateProjectChecklistAPI(views.APIView):
+
+    def post(self, request, *args, **kwargs):
+
+        project_id = request.data.get('project_id', None)
+        checklists = request.data.get('checklist', None)
+
+        if project_id and checklists:
+            try:
+                project = Project.objects.get(pk = project_id)
+                for checklist in checklists:
+                    CheckList.objects.create(
+                        name=checklist,
+                        project=project
+                    )
+                return Response({"message": "Checklist Created"}, status=status.HTTP_200_OK)
+            except:
+                return Response({"message": "Somthing Went Wrong"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"message": "Pass project ID and Checklist"}, status=status.HTTP_204_NO_CONTENT)
+    
+
+class CreateProjectAndChecklistAPI(views.APIView):
+
+    def post(self, request, *args, **kwargs):
+
+        name = request.data.get('name', None)
+        checklists = request.data.get('checklist', None)
+        user_id = request.data.get('user_id', None)
+
+        if name and checklists and user_id:
+            try:
+                user = User.objects.get(pk = user_id)
+                slug = slugify(name)
+                project = Project.objects.create(user=user, name=name, slug= slug)
+                for checklist in checklists:
+                    CheckList.objects.create(
+                        name=checklist,
+                        project=project
+                    )
+                return Response({"message": "Checklist Created"}, status=status.HTTP_200_OK)
+            except:
+                return Response({"message": "Somthing Went Wrong"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"message": "Pass project ID and Checklist"}, status=status.HTTP_204_NO_CONTENT)
+
+
+
+
+
+
+
+
+
+
+
+
+# from rest_framework import serializers
+
+# from .models import *
+
+from rest_framework import serializers
+from django.contrib.auth.models import User
+from rest_framework.exceptions import APIException
+from rest_framework import status
+from django.utils.encoding import force_str
+
+
+class CustomValidation(APIException):
+    status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+    default_detail = 'A server error occurred.'
+    def __init__(self, detail, field, detail2,field2,status_code):
+        if status_code is not None:self.status_code = status_code
+        if detail is not None:
+            self.detail = {field: force_str(detail),field2: int(force_str(detail2))}
+        else: self.detail = {'detail': force_str(self.default_detail)}
+
+class SignupSerializer(serializers.ModelSerializer):
+    def validate(self, value):
+        if User.objects.filter(email=value['email']):
+            raise CustomValidation('Email already exists.','msg',400,'status', status_code=status.HTTP_200_OK)
+        return value
+    class Meta:
+        model = User
+        fields = ('id', 'email', 'first_name', 'last_name','password')
+        # fields = ('id', 'email', 'password')
+        extra_kwargs = {'password':{'write_only':True}}
+
+    def create(self, validated_data):
+        user = User.objects.create_user(validated_data['email'], validated_data['email'],validated_data['first_name'],validated_data['last_name'],validated_data['password'])
+        # user = User.objects.create_user(validated_data['email'], validated_data['email'],validated_data['password'])
+
+        return user
+
+from rest_framework import serializers
+from .models import User,Project,CheckList
+
+
+
+class UserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ('id','first_name','last_name','email','phone_no')
+
+
+class RegisterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id','email','password', 'last_name','first_name','phone_no')
+        extra_kwargs = {
+            'password':{'write_only': True},
+        }
+    def create(self, validated_data):
+        user = User.objects.create_user(validated_data['email'],
+                                        password = validated_data['password'],
+                                        first_name = validated_data['first_name'],
+                                        phone_no=validated_data['phone_no'],
+                                        last_name=validated_data['last_name'],
+                                    )
+
+        return user
+
+
+
+class LoginSerializer(serializers.Serializer):
+    email = serializers.CharField(max_length=200)
+    password = serializers.CharField(max_length=200)
+
+
+
+
+class ProjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Project
+        fields="__all__"
+
+
+
+class CheckListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=CheckList
+        fields="__all__"
+
+
 
