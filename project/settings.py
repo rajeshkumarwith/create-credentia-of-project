@@ -143,7 +143,10 @@ MIDDLEWARE = [
 CORS_ORIGIN_WHITELIST = [
     'http://localhost:3000',
     'http://psd2htmlx.com:5050',
-    'https://accounts.google.com'
+    'https://accounts.google.com',
+    'https://app.doddlehq.com/',
+    
+
 ]
 
 ROOT_URLCONF = 'project.urls'
