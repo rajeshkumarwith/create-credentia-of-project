@@ -1196,48 +1196,452 @@ class SearchDataApi(generics.ListCreateAPIView):
                 output_rows.append(output_row)
             df=pd.DataFrame(output_row, columns=['query', 'clicks', 'impressions', 'ctr','position'])
             return Response(df)
-            
-        
-from rest_framework.decorators import api_view
+
+
+
+class QueryFilter(APIView):
+    pagination_class = CustomPagination
+    def get(self,request,*args,**kwargs):
+            start_date = self.request.query_params.get('start_date')
+            end_date = self.request.query_params.get('end_date')
+            query=self.request.query_params.get('query')
+            if start_date and end_date:
+                pass
+            else:
+                start_date = "2022-03-01"
+                end_date = "2022-03-15"
+            # country=request.data.get('country')
+            # device=request.data.get('device')
+            # page=request.data.get('page')
+            scopes = ['https://www.googleapis.com/auth/webmasters']
+            service = gsc_auth(scopes)
+            sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:hptourtravel.com').execute()
+            service = gsc_auth(scopes)
+            list=[]
+            print(service,'sssssssssss')
+            request = {
+                "startDate": start_date,
+                "endDate": end_date,
+                # 'query':query,
+                "dimensions": ['query'],
+            "rowLimit": 20
+            }
+            # gsc_search_analytics = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
+            # df = pd.DataFrame(gsc_search_analytics['rows'])
+            response = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
+            df=pd.DataFrame(response['rows'])
+            # list=[]
+            data=[]
+            for row in response['rows']:
+                # query=row['keys'][0]
+               
+                clicks=row['clicks']
+                ctr=row['ctr']
+                impressions=row['impressions']
+                position=row['position']
+                data.append({
+                    'query':query,
+                    'clicks':clicks,
+                    'ctr':ctr,
+                    'impressions':impressions,
+                    'position':position
+                })
+            # query=response['rows']['keys']
+            print(query,'qqqqqqqqqqqq')
+            # df = pd.DataFrame(data, columns=['page', 'clicks', 'impressions', 'ctr','position'])
+            df=pd.DataFrame(data)
+            df['ctr']=df['ctr'].round(2)
+            df['position']=df['position'].round(2)
+            df['impressions']=df['impressions'].round(2)
+            final_row_data=[]
+            for index ,rows in df.iterrows():
+                final_row_data.append(rows.to_dict())
+            return Response(final_row_data)
+    
+
+
+class SearchAPIView(viewsets.ModelViewSet):
+    serializer_class=SearchSerailizer
+    queryset=Search.objects.all()
+    def get_queryset(self):
+        return super().get_queryset()
+    
+
+from django.shortcuts import render
+from rest_framework.views import APIView
 from rest_framework.response import Response
-
-@api_view(['GET'])
-def search_results(request):
-    query = request.GET.get('q', '')
-    # TODO: perform search using the query parameter
-    return Response({"query": query})
-
+from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
-def get_search_performance_data(query):
-    scopes = ['https://www.googleapis.com/auth/webmasters']
-    service = gsc_auth(scopes)
-    sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:hptourtravel.com').execute()
-    service = gsc_auth(scopes)
-    # query=request.query_params.get('query')
-    # Set the search query parameters
-    request = {
-        'startDate': '2022-01-01',
-        'endDate': '2022-04-30',
-        'dimensions': ['query'],
-        'query': query
-    }
 
-    # Execute the search analytics query and retrieve the results
-    response = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
-    print(response['rows'],'rrrrrrrrrrrrrrrrrrr')
-    return response['rows'][0]
+class SearchConsoleAPIView(APIView):
+    def get(self, request, *args, **kwargs):
+        scopes = ['https://www.googleapis.com/auth/webmasters']
+        service = gsc_auth(scopes)
+        project=self.request.query_params.get('project')
+        sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:' +str(project)).execute()
+        service = gsc_auth(scopes)
+        request = {
+            'startDate': '2022-01-01',
+            'endDate': '2022-02-01',
+            'dimensions': ['query'],
+            'rowLimit': 10
+        }
+        response = service.searchanalytics().query(siteUrl='sc-domain: ' + str(project), body=request).execute()
+        
+        # Save the data to the database            
+        for row in response['rows']:
+            keyword = row['keys'][0]
+            clicks = row['clicks']
+            ctr = row['ctr']
+            impressions = row['impressions']
+            position = row['position']
+            search_console_data = SearchResult(
+                keyword=keyword,
+                clicks=clicks,
+                ctr=ctr,
+                impressions=impressions,
+                position=position
+            )
+            data=SearchResult(project=project)
+            data.save()
+            search_console_data.save()
+        
+        # Return a success response
+        return Response({'message': 'Data saved successfully'})
 
-@api_view(['GET'])
-def search_results(request):
-    query = request.GET.get('q', '')
-    # query='himachal shakti peeth yatra'
-    search_performance_data = get_search_performance_data(query)
-    return Response({
-        "query": query,
-        "CTR": search_performance_data['ctr'],
-        "clicks": search_performance_data['clicks'],
-        "position": search_performance_data['position'],
-        "impressions": search_performance_data['impressions']
-    })
+
+
+class QueryFilterApi(APIView):
+    def get(self,request,*args,**kwargs):
+        # keyword=self.request.query_params.get('keyword')
+        # data=Search.objects.filter(keyword=keyword).values('keyword','clicks','ctr','impressions','position')
+        data=Search.objects.all().values()
+        return Response(data)
+    
+from django.db.models import Q
+from rest_framework.generics import ListAPIView
+
+class SearchListdataView(ListAPIView):
+    serializer_class = SearchSerailizer
+    def get_queryset(self):
+        query_params = self.request.query_params.get('keyword', None)
+        if query_params is not None:
+            values = query_params.split(',')
+            print(values,'vvvvvvvvvvvv')
+            queries = [Q(keyword=value) for value in values]
+            print(queries,'qqqqqqqqqqqq')
+            query = queries.pop()
+            print(query,'eeeeeeeeeee')
+            for q in queries:
+                query |= q
+            queryset = Search.objects.filter(query)
+            print(queryset,'qquuuuuuuuuuuuu')
+        else:
+            queryset = Search.objects.all()
+        return queryset
+
+
+
+
+from allauth.socialaccount.models import SocialAccount
+from django.shortcuts import redirect
+
+def google_auth_callback(request):
+    social_account = SocialAccount.objects.filter(provider='google', user=request.user).first()
+    if social_account:
+        user = social_account.user
+        print(user,'uuuuuuuuu')
+        user.email = social_account.extra_data['email']
+        print(user.email,'eeeeeeeeeeeeee')
+        user.save()
+
+    return 'data'
+
+class Googleauthcallback(generics.GenericAPIView):
+    def get(self,request,*args,**kwargs):
+        social_account=SocialAccount.objects.filter(provider='google',user=request.user).first()
+        print(social_account,'ssssssssssssssss')
+        if social_account:
+            user=social_account.user
+            user.email=social_account.extra_data['email']
+            user.save()
+        return Response({'save successfully'})
+
+
+
+
+from rest_framework.generics import GenericAPIView
+from .serializers import*
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.permissions import AllowAny
+from rest_framework.decorators import permission_classes
+
+
+@permission_classes((AllowAny, ))
+class GoogleSocialAuthView(GenericAPIView):
+    serializer_class = GoogleSocialAuthSerializer
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = ((serializer.validated_data)['auth_token'])
+        print(data,'ddddddddddddddd')
+        return Response(data, status=status.HTTP_200_OK)
+    
+
+# from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
+# from allauth.socialaccount.providers.oauth2.client import OAuth2Client
+# from rest_auth.registration.views import SocialLoginView
+# from rest_framework.response import Response
+# from rest_framework.views import APIView
+
+# from .serializers import UserSerializer
+
+
+# class GoogleLogin(SocialLoginView):
+#     adapter_class = GoogleOAuth2Adapter
+#     client_class = OAuth2Client
+
+#     def process_login(self):
+#         token = self.get_token(self.request.user)
+#         user = self.request.user
+#         serializer = UserSerializer(user)
+#         response = Response(serializer.data)
+#         response.set_cookie('jwt', token)
+#         print(response,'rrrrrrrrrrr')
+#         return response
+
+
+class UserAPIView(APIView):
+    def get(self, request):
+        user = request.user
+        serializer = UserSerializer(user)
+        return Response(serializer.data)
+
+from datetime import datetime, timedelta
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+from django.http import JsonResponse
+from .models import SearchResult
+
+def update_search_results(request):
+    credentials = service_account.Credentials.from_service_account_file('/home/ocode-22/Documents/dockerwithdjango/project/credentials.json')
+    searchconsole = build('searchconsole', 'v1', credentials=credentials)
+    user = request.user
+    project = user.project_set.first()
+    keywords = project.keyword_set.all()
+    start_date = datetime.now() - timedelta(days=30)
+    end_date = datetime.now()
+
+    for keyword in keywords:
+        query = {
+            'startDate': start_date.strftime('%Y-%m-%d'),
+            'endDate': end_date.strftime('%Y-%m-%d'),
+            'dimensions': ['query'],
+            'rowLimit': 50,
+            'searchType': 'web',
+            'startRow': 0,
+            'aggregationType': 'auto',
+            'dimensionFilterGroups': [{
+                'filters': [{
+                    'dimension': 'query',
+                    'operator': 'equals',
+                    'expression': keyword.name
+                }]
+            }]
+        }
+        response = searchconsole.searchanalytics
+
+
+# class update_search_results(APIView):
+#     def get(self,request,*args,**kwargs):
+#             # credentials = service_account.Credentials.from_service_account_file('/home/ocode-22/Documents/dockerwithdjango/project/credentials.json')
+#             # searchconsole = build('searchconsole', 'v1', credentials=credentials)
+#             scopes = ['https://www.googleapis.com/auth/webmasters']
+#             searchconsole = gsc_auth(scopes)
+#             # credentials = service_account.Credentials.from_service_account_file('/path/to/service_account.json')
+#             # searchconsole = build('searchconsole', 'v1', credentials=credentials)
+#             user = request.user
+#             project = Project.objects.filter(user=user).first()
+#             keywords = Keyword.objects.filter(project=project)
+#             start_date = datetime.now() - timedelta(days=30)
+#             end_date = datetime.now()
+
+#             for keyword in keywords:
+#                 query = {
+#                     'startDate': start_date.strftime('%Y-%m-%d'),
+#                     'endDate': end_date.strftime('%Y-%m-%d'),
+#                     'dimensions': ['query'],
+#                     'rowLimit': 50,
+#                     'searchType': 'web',
+#                     'startRow': 0,
+#                     'aggregationType': 'auto',
+#                     'dimensionFilterGroups': [{
+#                         'filters': [{
+#                             'dimension': 'query',
+#                             'operator': 'equals',
+#                             'expression': keyword.name
+#                         }]
+#                     }]
+#                 }
+#                 response = searchconsole.searchanalytics().query(siteUrl='sc-domain', body=query).execute()
+#                 for row in response['rows']:
+#                     clicks = row['clicks']
+#                     ctr = row['ctr']
+#                     impressions = row['impressions']
+#                     position = row['position']
+#                     SearchResult.objects.create(keyword=keyword, clicks=clicks, ctr=ctr, impressions=impressions, position=position)
+
+#             return Response({"msg":'database create successfully'})
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+# from .models import SearchConsoleData
+from .serializers import SearchConsoleDataSerializer
+from google.oauth2.credentials import Credentials
+from googleapiclient.errors import HttpError
+from googleapiclient.discovery import build
+
+class SearchConsoleDataView(APIView):
+    permission_classes = (AllowAny,)
+    def get(self, request, format=None):
+        # # Authenticate and authorize the API client
+        # credentials = Credentials.from_authorized_user_info(request.session['google_auth'])
+
+        # # # Build the Google Search Console API client
+        # service = build('searchconsole', 'v1', credentials=credentials)
+        project=request.data['project']
+        scopes = ['https://www.googleapis.com/auth/webmasters']
+        service = gsc_auth(scopes)
+        # Call the Google Search Console API to retrieve data
+        try:
+            response = service.searchanalytics().query(
+                body={
+                    'startDate': '2022-01-01',
+                    'endDate': '2022-04-01',
+                    'dimensions': ['query'],
+                    'rowLimit': 100
+                },
+                siteUrl='sc-domain:' +str(project)).execute()
+
+            # Save data to the database
+            for row in response['rows']:
+                data = {
+                    'user':request.user,
+                    'project': project,
+                    'keyword': row['keys'][0],
+                    'clicks': row['clicks'],
+                    'ctr': row['ctr'],
+                    'impressions': row['impressions'],
+                    'position': row['position']
+                }
+                serializer = SearchConsoleDataSerializer(data=data)
+                if serializer.is_valid():
+                    serializer.save()
+        except HttpError as error:
+            return Response({'error': error.resp.status}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({'message': 'Data saved successfully'}, status=status.HTTP_200_OK)
+
+
+
+class RemoveSearch(APIView):
+    def get(self,request,*args,**kwargs):
+        SearchConsoleData.objects.all().delete()
+        return Response({'msg':'remove all data'})
+
+# from apiclient import discovery
+# import httplib2
+# from oauth2client import client
+
+# class SearchData(APIView):
+#     def get(self,request,*args,**kwargs):
+#         if not request.headers.get('X-Requested-With'):
+#             abort(403)
+
+#         CURR_DIR  ='/home/ocode-22/Documents/dockerwithdjango/project'
+
+#         # Exchange auth code for access token, refresh token, and ID token
+#         credentials = client.credentials_from_clientsecrets_and_code(
+#              str(CURR_DIR)+'/credentials.json',
+#             ['https://www.googleapis.com/auth/drive.appdata', 'profile', 'email'],
+#             auth_code)
+
+#         # Call Google API
+#         http_auth = credentials.authorize(httplib2.Http())
+#         drive_service = discovery.build('drive', 'v3', http=http_auth)
+#         appfolder = drive_service.files().get(fileId='appfolder').execute()
+
+#         # Get profile info from ID token
+#         userid = credentials.id_token['sub']
+#         email = credentials.id_token['email']
+#         return Response(email)
+    
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.authtoken.models import Token
+
+class CustomAuthToken(ObtainAuthToken):
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data,
+                                           context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        token, created = Token.objects.get_or_create(user=user)
+        return Response({
+            'user_id': user.pk,
+            'email': user.email
+        })
+    
+
+
+
+class ProjectApiView(viewsets.ModelViewSet):
+    queryset=Project.objects.all()
+    serializer_class=ProjectSerializer
+
+
+
+
+
+class RegisterApi(generics.GenericAPIView):
+    serializer_class = RegisterSerializer
+    def post(self, request, *args,  **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        return Response({
+            "user": UserSerializer(user, context=self.get_serializer_context()).data,
+            "message": "User Created Successfully.",
+        })
+
+
+
+class LoginApi(generics.GenericAPIView):
+    serializer_class = LoginSerializer
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.data
+        email = data['email']
+        password = data['password']
+
+        try:
+            user = User.objects.get(email = email)
+            validate = check_password(password, user.password)
+            if validate:
+                token = str(RefreshToken.for_user(user))
+                access = str(RefreshToken.for_user(user).access_token)
+                return Response({
+                "user": UserSerializer(user, context=self.get_serializer_context()).data,
+                "access": access,
+                "refresh": token,
+
+                })
+            else:
+                content = {"detail": "Password Do not Match"}
+                return Response(content, status=status.HTTP_404_NOT_FOUND)
+        except:
+            content = {"detail": "No active account found with the given credentials"}
+            return Response(content, status=status.HTTP_404_NOT_FOUND)
 

@@ -46,11 +46,11 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     'django_filters',
     'oauth2_provider',
-    'social_django',
+    # 'social_django',
     'drf_social_oauth2',
     'rest_framework.authtoken',
     'rest_auth',
-    
+    'doddle',
 
 ]
 
@@ -73,19 +73,9 @@ SOCIALACCOUNT_PROVIDERS = {
         }
     }
 }
-SOCIALACCOUNT_PROVIDERS = {
-    'google': {
-        'SCOPE': [
-            'profile',
-            'email',
-        ],
-        'AUTH_PARAMS': {
-            'access_type': 'online',
-        }
-    }
-}
 
-AUTH_USER_MODEL = 'app.User'
+
+AUTH_USER_MODEL = 'doddle.User'
 
 
 SITE_ID = 1
@@ -95,14 +85,7 @@ LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
 
-# REST_FRAMEWORK = {
-#     'DEFAULT_AUTHENTICATION_CLASSES': [
-#         'rest_framework_simplejwt.authentication.JWTAuthentication',
-#     ],
-#    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-#    'PAGE_SIZE': 100,
-#    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema' 
-# }
+
 
 REST_FRAMEWORK = {
       'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -115,8 +98,7 @@ AUTHENTICATION_BACKENDS = (
    'drf_social_oauth2.backends.DjangoOAuth2',
    'django.contrib.auth.backends.ModelBackend',
 )
-# ACCOUNT_AUTHENTICATION_METHOD = 'email'
-# ACCOUNT_EMAIL_VERIFICATION = 'none'
+
 
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
@@ -142,6 +124,9 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
+
+SOCIAL_AUTH_URL_NAMESPACE = 'social'
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

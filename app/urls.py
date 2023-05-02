@@ -10,8 +10,11 @@ from rest_framework import routers
 router=routers.DefaultRouter()
 router.register('kewords',views.TopqueriesAPI, basename='profile')
 router.register('pages',views.TopPageAPI,basename='page')
+router.register('save',views.SearchAPIView, basename='save')
+router.register('project',views.ProjectApiView,basename='project')
 
 
+# router.register('list',views.SearchListdataView,basename='list')
 urlpatterns=[
     path('api/token/', jwt_views.TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
@@ -31,7 +34,17 @@ urlpatterns=[
     path('filter/',DateFilter.as_view(),name='filter'),
     path('api/',QueryAPI.as_view(),name='api'),
     path('verify/',DomainVerify.as_view(),name='verify'),
-    path('search/',search_results,name='search')
+    path('search/',SearchConsoleAPIView.as_view(),name='search'),
+    path('queryfilter/',QueryFilterApi.as_view(),name='queryufilter'),
+    # path('questionfilter/',QuestionsAPIView.as_view(),name='question'),
+    path('list/',SearchListdataView.as_view(),name='list'),
+    path('save/',SearchConsoleDataView.as_view(),name='save'),
+    path('loginuser/',GoogleSocialAuthView.as_view(),name='google'),
+    path('credential/',CustomAuthToken.as_view(),name='credebtial'),
+    path('register/',RegisterApi.as_view(),name='register'),
+  
+
+    
 
 
    
