@@ -144,7 +144,7 @@ CORS_ORIGIN_WHITELIST = [
     'http://localhost:3000',
     'http://psd2htmlx.com:5050',
     'https://accounts.google.com',
-    'https://app.doddlehq.com/',
+    'https://app.doddlehq.com',
     
 
 ]
