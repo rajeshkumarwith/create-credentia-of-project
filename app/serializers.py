@@ -131,10 +131,14 @@ class SearchSerailizer(serializers.ModelSerializer):
     # keyword = serializers.ListField(child=serializers.CharField())
 
     class Meta:
-        model=Search
+        model=SearchConsoleData
         fields=('id','project','keyword','clicks','ctr','impressions','position')
 
 
+class SearchDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=SearchConsoleData
+        fields=('keyword',)
 
 class QuestionSerializer(serializers.ModelSerializer):
     class Meta:

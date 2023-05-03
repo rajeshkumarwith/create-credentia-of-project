@@ -45,5 +45,5 @@ def register_social_user(provider, user_id, email, name):
         return {
             'email': new_user.email,
             'username': new_user.username,
-            'tokens': str(new_token[0]['key']),
+            # 'tokens': str(new_token[0]['key']),
         }

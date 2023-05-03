@@ -937,13 +937,18 @@ from rest_framework import status
 
 import re
 class  DomainVerify(APIView):
-    def get(self,request,*args,**kwargs):
+    def post(self,request,*args,**kwargs):
+
         try:
             scopes = ['https://www.googleapis.com/auth/webmasters']
-            service = gsc_auth(scopes)
-            project=self.request.query_params.get('project')
-            query=self.request.query_params.get('query')
-            sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:'+str(project)).execute()
+            # service = gsc_auth(scopes)
+            credentials = Credentials.from_authorized_user_info({"token": "ya29.a0AWY7CklGQ2Rk5m2qb6Let9O3e8XuEeoigFSfkna_ykl7O7iJEbMPk9ox2rNrPhoQDmtu4_tJcA5QYwDgNDu3SNE37gM-7Cq8KlyB7Few0k7LTesUlPBBko39Ys5T8KHGlz2APHijZvh49O544OVzTZIpjZuBWZzzaCgYKAY4SARASFQG1tDrpS8rerqNq5QrNEWpB52hjmA0167", "refresh_token": "1//0gTCczJ9NH_EPCgYIARAAGBASNwF-L9Irk3KNeZ0IpOk3OpABFzuztmKLv-mSROuQ6Vrl6q5PMaMt56pai7ovJh5Mi9llAdwy0o0", "token_uri": "https://oauth2.googleapis.com/token", "client_id": "857134565960-c8itki1b1mml47692pemc05voj1slebo.apps.googleusercontent.com", "client_secret": "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", "scopes": ["https://www.googleapis.com/auth/webmasters"], "expiry": "2023-05-03T11:25:49.380563Z"})
+            service = build('webmasters', 'v3', credentials=credentials)
+            domain_name=request.data.get('domain_name')
+            # project_name=self.request.query_params.get('project_name')
+            # if not project_name:
+            #     project_name='raj'            
+            sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:'+str(domain_name)).execute()
             service = gsc_auth(scopes)
             list=[]
             print(service,'sssssssssss')
@@ -953,12 +958,13 @@ class  DomainVerify(APIView):
                 "dimensions": ['query'],
             "rowLimit": 25000
                 }
-            response = service.searchanalytics().query(siteUrl='sc-domain:'+str(project), body=request).execute()
+            response = service.searchanalytics().query(siteUrl='sc-domain:'+str(domain_name), body=request).execute()
             df=pd.DataFrame(response['rows'])
+            print(df,'dddddddddddddd')
             # df = pd.DataFrame(columns=['keywords', 'clicks', 'impressions', 'ctr','position'])
             data=[]
             for row in response['rows']:
-                query=query
+                query=row['keys'][0]
                 clicks=row['clicks']
                 ctr=row['ctr']
                 impressions=row['impressions']
@@ -978,10 +984,10 @@ class  DomainVerify(APIView):
             for index ,rows in df.iterrows():
                 final_row_data.append(rows.to_dict())
             if df is not None:
-                # return Response(status=status.HTTP_200_OK)
-                return Response(final_row_data)
+                return Response(status=status.HTTP_200_OK)
+                    # return Response(final_row_data)
         except:
-            return Response(status=status.HTTP_400_BAD_REQUEST)   
+            return Response({"message": "fdgfdg"},status=status.HTTP_400_BAD_REQUEST)   
 
       
        
@@ -1335,13 +1341,27 @@ class SearchListdataView(ListAPIView):
             print(query,'eeeeeeeeeee')
             for q in queries:
                 query |= q
-            queryset = Search.objects.filter(query)
+            queryset = SearchConsoleData.objects.filter(query)
             print(queryset,'qquuuuuuuuuuuuu')
         else:
-            queryset = Search.objects.all()
+            queryset = SearchConsoleData.objects.all()
         return queryset
 
+# class KeywordListAPIView(ListAPIView):
+#     serializer_class=SearchConsoleDataSerializer
+#     def get_queryset(self):
+#         project=self.request.query_params.get('project')
+#         data=SearchConsoleData.objects.filter(project=project).values('keyword')[:20]
+#         return data
 
+class KeywordListAPIView(APIView):
+    serializer_class=SearchDataSerializer
+    def get(self,request,*args,**kwargs):
+        project=self.request.query_params.get('project')
+        # data=SearchConsoleData.objects.filter(project=project).values('keyword')[:20]
+        search=SearchConsoleData.objects.filter(project=project).values('keyword').order_by('keyword')[:20]
+        # serializer=SearchDataSerializer(search, many=True)
+        return Response(search)
 
 
 from allauth.socialaccount.models import SocialAccount
@@ -1505,12 +1525,7 @@ from googleapiclient.discovery import build
 
 class SearchConsoleDataView(APIView):
     permission_classes = (AllowAny,)
-    def get(self, request, format=None):
-        # # Authenticate and authorize the API client
-        # credentials = Credentials.from_authorized_user_info(request.session['google_auth'])
-
-        # # # Build the Google Search Console API client
-        # service = build('searchconsole', 'v1', credentials=credentials)
+    def post(self, request, format=None):
         project=request.data['project']
         scopes = ['https://www.googleapis.com/auth/webmasters']
         service = gsc_auth(scopes)
@@ -1528,7 +1543,6 @@ class SearchConsoleDataView(APIView):
             # Save data to the database
             for row in response['rows']:
                 data = {
-                    'user':request.user,
                     'project': project,
                     'keyword': row['keys'][0],
                     'clicks': row['clicks'],
@@ -1543,6 +1557,27 @@ class SearchConsoleDataView(APIView):
             return Response({'error': error.resp.status}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({'message': 'Data saved successfully'}, status=status.HTTP_200_OK)
+
+
+
+# Execute the query and retrieve the response
+# response = search_console_service.searchanalytics().query(siteUrl='http://www.example.com', body=query).execute()
+
+# # Process the response and save the data to the database
+# rows = response.get('rows', [])
+# for row in rows:
+#     data = SearchConsoleData(
+#         user=user_email,
+#         project=site_url,
+#         keyword=row['keys'][1],
+#         clicks=row['clicks'],
+#         ctr=row['ctr'],
+#         position=row['position'],
+#         impressions=row['impressions']
+#     )
+#     data.save()
+
+
 
 
 
@@ -1594,54 +1629,4 @@ class CustomAuthToken(ObtainAuthToken):
         })
     
 
-
-
-class ProjectApiView(viewsets.ModelViewSet):
-    queryset=Project.objects.all()
-    serializer_class=ProjectSerializer
-
-
-
-
-
-class RegisterApi(generics.GenericAPIView):
-    serializer_class = RegisterSerializer
-    def post(self, request, *args,  **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        return Response({
-            "user": UserSerializer(user, context=self.get_serializer_context()).data,
-            "message": "User Created Successfully.",
-        })
-
-
-
-class LoginApi(generics.GenericAPIView):
-    serializer_class = LoginSerializer
-    def post(self, request):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        data = serializer.data
-        email = data['email']
-        password = data['password']
-
-        try:
-            user = User.objects.get(email = email)
-            validate = check_password(password, user.password)
-            if validate:
-                token = str(RefreshToken.for_user(user))
-                access = str(RefreshToken.for_user(user).access_token)
-                return Response({
-                "user": UserSerializer(user, context=self.get_serializer_context()).data,
-                "access": access,
-                "refresh": token,
-
-                })
-            else:
-                content = {"detail": "Password Do not Match"}
-                return Response(content, status=status.HTTP_404_NOT_FOUND)
-        except:
-            content = {"detail": "No active account found with the given credentials"}
-            return Response(content, status=status.HTTP_404_NOT_FOUND)
 

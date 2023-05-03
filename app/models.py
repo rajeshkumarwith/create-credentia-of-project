@@ -85,9 +85,8 @@ class Book(models.Model):
 # class User(models.Model):
 #     name = models.CharField(max_length=100)
 
-from django.contrib.auth.models import User
-from django.conf import settings
-User = settings.AUTH_USER_MODEL
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 class Project(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -114,7 +113,6 @@ class SearchResult(models.Model):
 
 
 class SearchConsoleData(models.Model):
-    user = models.CharField(max_length=255,blank=True,null=True)
     project = models.CharField(max_length=255,blank=True,null=True)
     keyword = models.CharField(max_length=255)
     clicks = models.IntegerField()
@@ -122,3 +120,11 @@ class SearchConsoleData(models.Model):
     impressions = models.IntegerField()
     position = models.FloatField()
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class DomainVerification(models.Model):
+    domain_name = models.CharField(max_length=255)
+    verification_code = models.CharField(max_length=255, null=True, blank=True)
+    verified = models.BooleanField(default=False)
+
+

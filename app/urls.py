@@ -11,7 +11,7 @@ router=routers.DefaultRouter()
 router.register('kewords',views.TopqueriesAPI, basename='profile')
 router.register('pages',views.TopPageAPI,basename='page')
 router.register('save',views.SearchAPIView, basename='save')
-router.register('project',views.ProjectApiView,basename='project')
+
 
 
 # router.register('list',views.SearchListdataView,basename='list')
@@ -41,7 +41,8 @@ urlpatterns=[
     path('save/',SearchConsoleDataView.as_view(),name='save'),
     path('loginuser/',GoogleSocialAuthView.as_view(),name='google'),
     path('credential/',CustomAuthToken.as_view(),name='credebtial'),
-    path('register/',RegisterApi.as_view(),name='register'),
+    path('keywordlist/',KeywordListAPIView.as_view(),name='keywordlist')
+   
   
 
     
