@@ -132,7 +132,7 @@ class SearchSerailizer(serializers.ModelSerializer):
 
     class Meta:
         model=SearchConsoleData
-        fields=('id','project','keyword','clicks','ctr','impressions','position')
+        fields=('id','keyword',)
 
 
 class SearchDataSerializer(serializers.ModelSerializer):

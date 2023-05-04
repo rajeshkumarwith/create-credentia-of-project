@@ -944,11 +944,12 @@ class  DomainVerify(APIView):
             # service = gsc_auth(scopes)
             credentials = Credentials.from_authorized_user_info({"token": "ya29.a0AWY7CklGQ2Rk5m2qb6Let9O3e8XuEeoigFSfkna_ykl7O7iJEbMPk9ox2rNrPhoQDmtu4_tJcA5QYwDgNDu3SNE37gM-7Cq8KlyB7Few0k7LTesUlPBBko39Ys5T8KHGlz2APHijZvh49O544OVzTZIpjZuBWZzzaCgYKAY4SARASFQG1tDrpS8rerqNq5QrNEWpB52hjmA0167", "refresh_token": "1//0gTCczJ9NH_EPCgYIARAAGBASNwF-L9Irk3KNeZ0IpOk3OpABFzuztmKLv-mSROuQ6Vrl6q5PMaMt56pai7ovJh5Mi9llAdwy0o0", "token_uri": "https://oauth2.googleapis.com/token", "client_id": "857134565960-c8itki1b1mml47692pemc05voj1slebo.apps.googleusercontent.com", "client_secret": "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", "scopes": ["https://www.googleapis.com/auth/webmasters"], "expiry": "2023-05-03T11:25:49.380563Z"})
             service = build('webmasters', 'v3', credentials=credentials)
-            domain_name=request.data.get('domain_name')
+            project=request.data.get('project')
+            
             # project_name=self.request.query_params.get('project_name')
             # if not project_name:
             #     project_name='raj'            
-            sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:'+str(domain_name)).execute()
+            sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:'+str(project)).execute()
             service = gsc_auth(scopes)
             list=[]
             print(service,'sssssssssss')
@@ -958,7 +959,8 @@ class  DomainVerify(APIView):
                 "dimensions": ['query'],
             "rowLimit": 25000
                 }
-            response = service.searchanalytics().query(siteUrl='sc-domain:'+str(domain_name), body=request).execute()
+            response = service.searchanalytics().query(siteUrl='sc-domain:'+str(project), body=request).execute()
+            
             df=pd.DataFrame(response['rows'])
             print(df,'dddddddddddddd')
             # df = pd.DataFrame(columns=['keywords', 'clicks', 'impressions', 'ctr','position'])
@@ -988,8 +990,12 @@ class  DomainVerify(APIView):
                     # return Response(final_row_data)
         except:
             return Response({"message": "fdgfdg"},status=status.HTTP_400_BAD_REQUEST)   
+        else:
+            siteUrl='sc-domain:'+str(project)
+            response = service.searchanalytics().query(siteUrl=siteUrl, body=request).execute()
+            if not siteUrl:
+                return Response({'message':'Not Found'})
 
-      
        
 class TopPageAPI(viewsets.ModelViewSet):
     serializer_class=PageDataSerializer
@@ -1341,7 +1347,9 @@ class SearchListdataView(ListAPIView):
             print(query,'eeeeeeeeeee')
             for q in queries:
                 query |= q
+            # stuff=SearchConsoleData.objects.all()[:10]
             queryset = SearchConsoleData.objects.filter(query)
+           
             print(queryset,'qquuuuuuuuuuuuu')
         else:
             queryset = SearchConsoleData.objects.all()
@@ -1359,7 +1367,7 @@ class KeywordListAPIView(APIView):
     def get(self,request,*args,**kwargs):
         project=self.request.query_params.get('project')
         # data=SearchConsoleData.objects.filter(project=project).values('keyword')[:20]
-        search=SearchConsoleData.objects.filter(project=project).values('keyword').order_by('keyword')[:20]
+        search=SearchConsoleData.objects.filter(project=project).values('id','keyword').order_by('keyword')[:20]
         # serializer=SearchDataSerializer(search, many=True)
         return Response(search)
 
@@ -1629,4 +1637,11 @@ class CustomAuthToken(ObtainAuthToken):
         })
     
 
+from django.db.models.functions import Round
 
+class ManualSearchAPIVIew(APIView):
+    def get(self,request,*args,**kwargs):
+        keyword=self.request.query_params.get('keyword')
+        data=SearchConsoleData.objects.filter(keyword=keyword).values()
+        return Response(data)
+    

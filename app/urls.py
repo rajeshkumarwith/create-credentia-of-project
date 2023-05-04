@@ -41,7 +41,8 @@ urlpatterns=[
     path('save/',SearchConsoleDataView.as_view(),name='save'),
     path('loginuser/',GoogleSocialAuthView.as_view(),name='google'),
     path('credential/',CustomAuthToken.as_view(),name='credebtial'),
-    path('keywordlist/',KeywordListAPIView.as_view(),name='keywordlist')
+    path('keywordlist/',KeywordListAPIView.as_view(),name='keywordlist'),
+    path('manual/',ManualSearchAPIVIew.as_view(),name='manual')
    
   
 

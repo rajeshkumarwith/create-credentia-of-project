@@ -122,6 +122,10 @@ class SearchConsoleData(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 
+    def save(self, *args, **kwargs):
+        self.position = round(self.position, 2)
+        super(SearchConsoleData, self).save(*args, **kwargs)
+
 class DomainVerification(models.Model):
     domain_name = models.CharField(max_length=255)
     verification_code = models.CharField(max_length=255, null=True, blank=True)
