@@ -22,8 +22,8 @@ from allauth.account.views import ConfirmEmailView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('',include('app.urls')),
-    path('',include('doddle.urls')),
+    path('api/',include('app.urls')),
+    path('api/',include('doddle.urls')),
     path('accounts/', include('allauth.urls')),
     # path('rest-auth/', include('dj_rest_auth.urls')),
     # path('rest-auth/registration/', include('dj_rest_auth.registration.urls')),

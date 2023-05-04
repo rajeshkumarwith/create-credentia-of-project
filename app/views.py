@@ -990,12 +990,7 @@ class  DomainVerify(APIView):
                     # return Response(final_row_data)
         except:
             return Response({"message": "fdgfdg"},status=status.HTTP_400_BAD_REQUEST)   
-        else:
-            siteUrl='sc-domain:'+str(project)
-            response = service.searchanalytics().query(siteUrl=siteUrl, body=request).execute()
-            if not siteUrl:
-                return Response({'message':'Not Found'})
-
+      
        
 class TopPageAPI(viewsets.ModelViewSet):
     serializer_class=PageDataSerializer
