@@ -1029,7 +1029,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 class DomainVerify(APIView):
-    def get(self, request):
+    def post(self, request):
         project = request.POST.get('project')
         creds = Credentials.from_authorized_user_file('/home/ocode-22/Documents/dockerwithdjango/project/TOKEN_FILE', ['https://www.googleapis.com/auth/webmasters'])
         service = build('webmasters', 'v3', credentials=creds)
