@@ -1027,11 +1027,13 @@ from rest_framework.response import Response
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+from django.conf import settings
+
 
 class DomainVerify(APIView):
     def post(self, request):
         project = request.POST.get('project')
-        creds = Credentials.from_authorized_user_file('/home/ocode-22/Documents/dockerwithdjango/project/TOKEN_FILE', ['https://www.googleapis.com/auth/webmasters'])
+        creds = Credentials.from_authorized_user_file(f'{settings.BASE_DIR}/TOKEN_FILE', ['https://www.googleapis.com/auth/webmasters'])
         service = build('webmasters', 'v3', credentials=creds)
 
         try:
