@@ -1350,11 +1350,11 @@ class SearchListdataView(ListAPIView):
             queryset = SearchConsoleData.objects.all()
         return queryset
 
-# class KeywordListAPIView(ListAPIView):
+# class SearchListdataView(ListAPIView):
 #     serializer_class=SearchConsoleDataSerializer
 #     def get_queryset(self):
-#         project=self.request.query_params.get('project')
-#         data=SearchConsoleData.objects.filter(project=project).values('keyword')[:20]
+#         # project=self.request.query_params.get('project')
+#         data=SearchConsoleData.objects.all().values('id','keyword').order_by('-keyword')[:20]
 #         return data
 
 class KeywordListAPIView(APIView):
@@ -1637,6 +1637,13 @@ from django.db.models.functions import Round
 class ManualSearchAPIVIew(APIView):
     def get(self,request,*args,**kwargs):
         keyword=self.request.query_params.get('keyword')
-        data=SearchConsoleData.objects.filter(keyword=keyword).values()
+        data=SearchConsoleData.objects.filter(keyword=keyword).values('id','keyword','clicks','position','ctr','impressions')
         return Response(data)
-    
+# class DataSearchAPIView(APIView):
+#     def get(self,request,*args,**Kwargs):
+#         keyword=self.request.query_params.get('keyword')
+#         data=SearchConsoleData.objects.filter(kewyowrd=keyword).values()
+#         return Response(data)
+
+
+
