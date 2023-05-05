@@ -935,63 +935,130 @@ from rest_framework import status
 
 
 
-import re
-class  DomainVerify(APIView):
-    def post(self,request,*args,**kwargs):
+# import re
+# class  DomainVerify(APIView):
+#     def post(self,request,*args,**kwargs):
+
+#         try:
+#             scopes = ['https://www.googleapis.com/auth/webmasters']
+#             # service = gsc_auth(scopes)
+#             credentials = Credentials.from_authorized_user_info({"token": "ya29.a0AWY7CklGQ2Rk5m2qb6Let9O3e8XuEeoigFSfkna_ykl7O7iJEbMPk9ox2rNrPhoQDmtu4_tJcA5QYwDgNDu3SNE37gM-7Cq8KlyB7Few0k7LTesUlPBBko39Ys5T8KHGlz2APHijZvh49O544OVzTZIpjZuBWZzzaCgYKAY4SARASFQG1tDrpS8rerqNq5QrNEWpB52hjmA0167", "refresh_token": "1//0gTCczJ9NH_EPCgYIARAAGBASNwF-L9Irk3KNeZ0IpOk3OpABFzuztmKLv-mSROuQ6Vrl6q5PMaMt56pai7ovJh5Mi9llAdwy0o0", "token_uri": "https://oauth2.googleapis.com/token", "client_id": "857134565960-c8itki1b1mml47692pemc05voj1slebo.apps.googleusercontent.com", "client_secret": "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", "scopes": ["https://www.googleapis.com/auth/webmasters"], "expiry": "2023-05-03T11:25:49.380563Z"})
+#             service = build('webmasters', 'v3', credentials=credentials)
+#             project=request.data.get('project')
+            
+#             # project_name=self.request.query_params.get('project_name')
+#             # if not project_name:
+#             #     project_name='raj'            
+#             sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:'+str(project)).execute()
+#             service = gsc_auth(scopes)
+#             list=[]
+#             print(service,'sssssssssss')
+#             request = {
+#                 "startDate": "2022-03-01",
+#                 "endDate": "2022-03-15",
+#                 "dimensions": ['query'],
+#             "rowLimit": 25000
+#                 }
+#             response = service.searchanalytics().query(siteUrl='sc-domain:'+str(project), body=request).execute()
+            
+#             df=pd.DataFrame(response['rows'])
+#             print(df,'dddddddddddddd')
+#             # df = pd.DataFrame(columns=['keywords', 'clicks', 'impressions', 'ctr','position'])
+#             data=[]
+#             for row in response['rows']:
+#                 query=row['keys'][0]
+#                 clicks=row['clicks']
+#                 ctr=row['ctr']
+#                 impressions=row['impressions']
+#                 position=row['position']
+#                 data.append({
+#                     'query':query,
+#                     'clicks':clicks,
+#                     'ctr':ctr,
+#                     'impressions':impressions,
+#                     'position':position
+#                 })
+#             df=pd.DataFrame(data)
+#             df['ctr']=df['ctr'].round(2)
+#             df['position']=df['position'].round(2)
+#             df['impressions']=df['impressions'].round(2)
+#             final_row_data=[]
+#             for index ,rows in df.iterrows():
+#                 final_row_data.append(rows.to_dict())
+#             if df is not None:
+#                 return Response(status=status.HTTP_200_OK)
+#                     # return Response(final_row_data)
+#         except:
+#             return Response({"message": "fdgfdg"},status=status.HTTP_400_BAD_REQUEST)   
+      
+# views.py
+
+
+       
+# class DomainVerify(APIView):
+#     def get(self,request,*args,**kwargs):
+#         try:
+#             url = request.POST.get('url')
+            
+#             # Initialize the credentials
+#             creds = Credentials.from_authorized_user_file('/home/ocode-22/Documents/dockerwithdjango/project/TOKEN_FILE', ['https://www.googleapis.com/auth/webmasters'])
+
+#             # Build the service object
+#             service = build('webmasters', 'v3', credentials=creds)
+
+#             # Use the sites().get() method to retrieve the details of the domain
+#             site_data = service.sites().get(siteUrl='sc-domain:'+str(url)).execute()
+#             if site_data['siteVerificationMethod'] == 'HTML file' or site_data['siteVerificationMethod'] == 'DNS record':
+#                 verified = True
+#                 verification_method = site_data['siteVerificationMethod']
+#             else:
+#                 verified = False
+#                 verification_method = ''
+#         except KeyError:
+#                 verified = False
+#                 verification_method = ''
+
+#         return JsonResponse({'verified': verified, 'verification_method': verification_method})
+
+# views.py
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
+
+class DomainVerify(APIView):
+    def post(self, request):
+        project = request.POST.get('project')
+        creds = Credentials.from_authorized_user_file('/home/ocode-22/Documents/dockerwithdjango/project/TOKEN_FILE', ['https://www.googleapis.com/auth/webmasters'])
+        service = build('webmasters', 'v3', credentials=creds)
 
         try:
-            scopes = ['https://www.googleapis.com/auth/webmasters']
-            # service = gsc_auth(scopes)
-            credentials = Credentials.from_authorized_user_info({"token": "ya29.a0AWY7CklGQ2Rk5m2qb6Let9O3e8XuEeoigFSfkna_ykl7O7iJEbMPk9ox2rNrPhoQDmtu4_tJcA5QYwDgNDu3SNE37gM-7Cq8KlyB7Few0k7LTesUlPBBko39Ys5T8KHGlz2APHijZvh49O544OVzTZIpjZuBWZzzaCgYKAY4SARASFQG1tDrpS8rerqNq5QrNEWpB52hjmA0167", "refresh_token": "1//0gTCczJ9NH_EPCgYIARAAGBASNwF-L9Irk3KNeZ0IpOk3OpABFzuztmKLv-mSROuQ6Vrl6q5PMaMt56pai7ovJh5Mi9llAdwy0o0", "token_uri": "https://oauth2.googleapis.com/token", "client_id": "857134565960-c8itki1b1mml47692pemc05voj1slebo.apps.googleusercontent.com", "client_secret": "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", "scopes": ["https://www.googleapis.com/auth/webmasters"], "expiry": "2023-05-03T11:25:49.380563Z"})
-            service = build('webmasters', 'v3', credentials=credentials)
-            project=request.data.get('project')
-            
-            # project_name=self.request.query_params.get('project_name')
-            # if not project_name:
-            #     project_name='raj'            
-            sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:'+str(project)).execute()
-            service = gsc_auth(scopes)
-            list=[]
-            print(service,'sssssssssss')
-            request = {
-                "startDate": "2022-03-01",
-                "endDate": "2022-03-15",
-                "dimensions": ['query'],
-            "rowLimit": 25000
-                }
-            response = service.searchanalytics().query(siteUrl='sc-domain:'+str(project), body=request).execute()
-            
-            df=pd.DataFrame(response['rows'])
-            print(df,'dddddddddddddd')
-            # df = pd.DataFrame(columns=['keywords', 'clicks', 'impressions', 'ctr','position'])
-            data=[]
-            for row in response['rows']:
-                query=row['keys'][0]
-                clicks=row['clicks']
-                ctr=row['ctr']
-                impressions=row['impressions']
-                position=row['position']
-                data.append({
-                    'query':query,
-                    'clicks':clicks,
-                    'ctr':ctr,
-                    'impressions':impressions,
-                    'position':position
-                })
-            df=pd.DataFrame(data)
-            df['ctr']=df['ctr'].round(2)
-            df['position']=df['position'].round(2)
-            df['impressions']=df['impressions'].round(2)
-            final_row_data=[]
-            for index ,rows in df.iterrows():
-                final_row_data.append(rows.to_dict())
-            if df is not None:
-                return Response(status=status.HTTP_200_OK)
-                    # return Response(final_row_data)
-        except:
-            return Response({"message": "fdgfdg"},status=status.HTTP_400_BAD_REQUEST)   
-      
-       
+          
+            site_data = service.sites().get(siteUrl='sc-domain:' +str(project)).execute()
+            print(site_data,'ssssssssssssss')
+            if site_data.get('siteVerificationMethod') in ['HTML file', 'DNS record']:
+                verified = True
+                verification_method = site_data['siteVerificationMethod']
+                print(verification_method,'vvvvvvvvvvvvvvvv')
+            else:
+                verified = False
+                verification_method = ''
+
+            return Response({'verified': verified, 'verification_method': verification_method})
+
+        except HttpError as error:
+            # Handle HttpError exceptions
+            return Response({'error': error.resp.status}, status=error.resp.status)
+
+        except KeyError:
+            # Handle KeyError exceptions
+            return Response({'error': 'siteVerificationMethod key not found'}, status=400)
+
+
+
+
 class TopPageAPI(viewsets.ModelViewSet):
     serializer_class=PageDataSerializer
     pagination_class = CustomPagination
