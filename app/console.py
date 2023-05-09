@@ -40,10 +40,6 @@ from django.shortcuts import redirect
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
-from googleapiclient.discovery import build
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
 
 # Create your views here.
 
@@ -1039,25 +1035,24 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from django.conf import settings
 
+#   project=request.data.get('project')
+#         # Build the Search Console API client using the credentials
+#         search_console = build('webmasters', 'v3', credentials=credentials)
 
+#         try:
+#             # Make the API request to verify the domain in Search Console
+#             response = search_console.sites().add(siteUrl='https://' + project + '/').execute()
+#             return Response(status=status.HTTP_200_OK)
 class DomainVerify(APIView):
     def post(self, request):
         project = request.data.get('project')
-        creds = Credentials.from_authorized_user_file(f'{settings.BASE_DIR}/credentials.json', ['https://www.googleapis.com/auth/webmasters'])
-        service = build('webmasters', 'v3', credentials=creds)
+        # creds = Credentials.from_authorized_user_file(f'{settings.BASE_DIR}/TOKEN_FILE', ['https://www.googleapis.com/auth/webmasters'])
+        creds = Credentials.from_service_account_file(f'{settings.BASE_DIR}/credentials.json', scopes=['https://www.googleapis.com/auth/webmasters'])
+        search_console = build('webmasters', 'v3', credentials=creds)
         try:
-            site_data = service.sites().get(siteUrl='sc-domain:' +str(project)).execute()
-            # site_data = service.sites().get(siteUrl=project).execute()
-            print(site_data,'ssssssssssssss')
-            if site_data.get('siteVerificationMethod') in ['HTML file', 'DNS record']:
-                verified = True
-                verification_method = site_data['siteVerificationMethod']
-                print(verification_method,'vvvvvvvvvvvvvvvv')
-            else:
-                verified = False
-                verification_method = ''
+            response = search_console.sites().add(siteUrl='https://' + project + '/').execute()
 
-            return Response({'verified': verified, 'verification_method': verification_method})
+            return Response(status=status.HTTP_200_OK)
 
         except HttpError as error:
             # Handle HttpError exceptions
@@ -1667,7 +1662,32 @@ class RemoveSearch(APIView):
         SearchConsoleData.objects.all().delete()
         return Response({'msg':'remove all data'})
 
+# from apiclient import discovery
+# import httplib2
+# from oauth2client import client
 
+# class SearchData(APIView):
+#     def get(self,request,*args,**kwargs):
+#         if not request.headers.get('X-Requested-With'):
+#             abort(403)
+
+#         CURR_DIR  ='/home/ocode-22/Documents/dockerwithdjango/project'
+
+#         # Exchange auth code for access token, refresh token, and ID token
+#         credentials = client.credentials_from_clientsecrets_and_code(
+#              str(CURR_DIR)+'/credentials.json',
+#             ['https://www.googleapis.com/auth/drive.appdata', 'profile', 'email'],
+#             auth_code)
+
+#         # Call Google API
+#         http_auth = credentials.authorize(httplib2.Http())
+#         drive_service = discovery.build('drive', 'v3', http=http_auth)
+#         appfolder = drive_service.files().get(fileId='appfolder').execute()
+
+#         # Get profile info from ID token
+#         userid = credentials.id_token['sub']
+#         email = credentials.id_token['email']
+#         return Response(email)
     
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
@@ -1715,22 +1735,19 @@ SCOPES = ['https://www.googleapis.com/auth/webmasters']
 class GoogleSearchConsoleView(APIView):
     def get(self, request):
         # Get the credentials object from Django settings
-        # creds_data =f'{settings.BASE_DIR}/credentials.json'
-        creds_data = {
-            'client_id': '286943146870-h21okc0jtogcva4mrmi28h4fpkcaagum.apps.googleusercontent.com',
-            'client_secret': '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',
-            'refresh_token': '1//0gLX0PkyUHAY_CgYIARAAGBASNwF-L9IrrUh_FA_fo8Lswlhj2hKdx78QCfjZG8kbYLjRHUFuIeDoF3BBMCcXXIuCOo8ycCzkJcc',
-            'token_uri': 'https://oauth2.googleapis.com/token'
-        }
-
-        # creds = Credentials.from_authorized_user_info(info=creds_data, scopes=SCOPES)
-        creds = Credentials.from_authorized_user_info(creds_data)
-
+        creds_data =f'{settings.BASE_DIR}/credentials.json'
+        creds = Credentials.from_authorized_user_info(info=creds_data, scopes=SCOPES)
 
         # Refresh the token if it has expired
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
+
+        # Get the access token
         access_token = creds.token
+
+        # Make your API requests using the access token
+        # ...
+
         return Response({'access_token': access_token})
 
 from django.conf import settings
@@ -1760,105 +1777,142 @@ def domains(request):
     # Return the domains as JSON
     return JsonResponse({'domains': list(Domain.objects.values('name'))})
 
-# class DomainsAPIView(APIView):
-#     def post(self,request,*args,**kwargs):
-#         credentials = Credentials.from_service_account_file(f'{settings.BASE_DIR}/credentials.json', scopes=['https://www.googleapis.com/auth/webmasters'])
-#         project=request.data.get('project')
-#         # Build the Search Console API client using the credentials
-#         search_console = build('webmasters', 'v3', credentials=credentials)
+class DomainsAPIView(APIView):
+    def post(self,request,*args,**kwargs):
+        credentials = Credentials.from_service_account_file(f'{settings.BASE_DIR}/credentials.json', scopes=['https://www.googleapis.com/auth/webmasters'])
+        project=request.data.get('project')
+        search_console = build('webmasters', 'v3', credentials=credentials)
+        try:
+            response = search_console.sites().add(siteUrl='https://' + project + '/').execute()
+            return Response(status=status.HTTP_200_OK)
+        except HttpError as error:
+            return Response({'status': 'error', 'message': 'An error occurred while verifying the domain.'})
 
-#         try:
-#             # Make the API request to verify the domain in Search Console
-#             response = search_console.sites().add(siteUrl='https://' + project + '/').execute()
-#             return Response({'status': 'success', 'message': 'Domain verified successfully.'})
-#         except HttpError as error:
-#             return Response({'status': 'error', 'message': 'An error occurred while verifying the domain.'})
-
-       
+    
 
 
-@api_view(['GET'])
-def google_auth(request):
-    # Redirect the user to the Google OAuth 2.0 consent screen
+@csrf_exempt
+def authenticate(request):
     flow = Flow.from_client_secrets_file(
             f'{settings.BASE_DIR}/client.json',
             scopes=['https://www.googleapis.com/auth/webmasters'],
-            redirect_uri='http://localhost:8000/search-console/callback',
+            redirect_uri='http://localhost:8000/search-console/callback'
         )
-  
     authorization_url, state = flow.authorization_url(
-        access_type='offline',
-        include_granted_scopes='true'
+            access_type='offline',
+            include_granted_scopes='true'
+        )
+    # request.session['state'] = state
+    return redirect(authorization_url)  
+    
+
+
+@csrf_exempt
+def google_search_console_login(request):
+    # create a Flow object for the Google OAuth2 authorization flow
+    flow = InstalledAppFlow.from_client_secrets_file(
+      f'{settings.BASE_DIR}/client.json',
+        scopes=['https://www.googleapis.com/auth/webmasters.readonly'],
+        redirect_uri='http://localhost:8000/search-console/callback',
+        state=request.session.session_key,
+       
     )
 
-    request.session['state'] = state
+    # start the authorization flow
+    authorization_url, state = flow.authorization_url(prompt='consent')
+
+    # store the state token in the user's session
+    request.session['google_state'] = state
+
+    # redirect the user to the Google OAuth2 authorization page
     return redirect(authorization_url)
 
 
-def google_auth(request):
-    flow = Flow.from_client_secrets_file(
+@csrf_exempt
+def google_search_console_login_redirect(request):
+    # create a Flow object for the Google OAuth2 authorization flow
+    flow = InstalledAppFlow.from_client_secrets_file(
        f'{settings.BASE_DIR}/client.json',
         scopes=['https://www.googleapis.com/auth/webmasters.readonly'],
         redirect_uri='http://localhost:8000/search-console/callback',
+        state=request.session.get('google_state'),
     )
-    auth_url, _ = flow.authorization_url(prompt='consent')
-    return redirect(auth_url)
+    # exchange the authorization code for an access token and refresh token
+    flow.fetch_token(authorization_response=request.get_full_path())
+
+    # store the access token and refresh token in the Django database
+    credentials = Credentials.from_authorized_user_info(info=flow.credentials.to_json())
+    print(credentials,'cccccccccccccc')
+    GoogleSearchConsoleTokenData.objects.update_or_create(
+        user=request.user,
+        provider='google_search_console',
+        defaults={
+            'access_token': credentials.access_token,
+            'refresh_token': credentials.refresh_token,
+        }
+    )
+
+    # redirect the user to the homepage
+    return redirect('/')
 
 
-# def google_auth_callback(request):
-#     flow = Flow.from_client_secrets_file(
-#         f'{settings.BASE_DIR}/client.json',
-#         scopes=['https://www.googleapis.com/auth/webmasters.readonly'],
-#         redirect_uri='http://localhost:8000/search-console/callback',
-#     )
-#     print(flow,'ffffffffffffff')
-#     flow.fetch_token(authorization_response=request.get_full_path())
-#     credentials = flow.credentials
-#     print(credentials,'ccccccccc')
-#     GoogleSearchConsoleTokenData.objects.create(
-#         # user=request.user,
-#         access_token=credentials.access_token,
-#         refresh_token=credentials.refresh_token,
-     
-#     )
-#     return redirect('/')
-
-class googleauthcallback(APIView):
+class QueryFilter(APIView):
+    pagination_class = CustomPagination
     def get(self,request,*args,**kwargs):
-        flow = Flow.from_client_secrets_file(
-            f'{settings.BASE_DIR}/client.json',
-            scopes=['https://www.googleapis.com/auth/webmasters.readonly'],
-            redirect_uri='http://localhost:8000/search-console/callback',
-        )
-        print(flow,'ffffffffffffff')
-        flow.fetch_token(authorization_response=request.get_full_path())
-        credentials = flow.credentials
-        print(credentials,'ccccccccc')
-        GoogleSearchConsoleTokenData.objects.create(
-            # user=request.user,
-            access_token=credentials.access_token,
-            refresh_token=credentials.refresh_token,
-        
-        )
-        return Response({'msg':'successfully created'})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            start_date = self.request.query_params.get('start_date')
+            end_date = self.request.query_params.get('end_date')
+            query=self.request.query_params.get('query')
+            if start_date and end_date:
+                pass
+            else:
+                start_date = "2022-03-01"
+                end_date = "2022-03-15"
+            # country=request.data.get('country')
+            # device=request.data.get('device')
+            # page=request.data.get('page')
+            scopes = ['https://www.googleapis.com/auth/webmasters']
+            service = authenticate(scopes)
+            sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:hptourtravel.com').execute()
+            service = authenticate(scopes)
+            list=[]
+            print(service,'sssssssssss')
+            request = {
+                "startDate": start_date,
+                "endDate": end_date,
+                # 'query':query,
+                "dimensions": ['query'],
+            "rowLimit": 20
+            }
+            # gsc_search_analytics = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
+            # df = pd.DataFrame(gsc_search_analytics['rows'])
+            response = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
+            df=pd.DataFrame(response['rows'])
+            # list=[]
+            data=[]
+            for row in response['rows']:
+                # query=row['keys'][0]
+               
+                clicks=row['clicks']
+                ctr=row['ctr']
+                impressions=row['impressions']
+                position=row['position']
+                data.append({
+                    'query':query,
+                    'clicks':clicks,
+                    'ctr':ctr,
+                    'impressions':impressions,
+                    'position':position
+                })
+            # query=response['rows']['keys']
+            print(query,'qqqqqqqqqqqq')
+            # df = pd.DataFrame(data, columns=['page', 'clicks', 'impressions', 'ctr','position'])
+            df=pd.DataFrame(data)
+            df['ctr']=df['ctr'].round(2)
+            df['position']=df['position'].round(2)
+            df['impressions']=df['impressions'].round(2)
+            final_row_data=[]
+            for index ,rows in df.iterrows():
+                final_row_data.append(rows.to_dict())
+            return Response(final_row_data)
+    
 

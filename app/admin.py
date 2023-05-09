@@ -13,3 +13,8 @@ admin.site.register(Project)
 admin.site.register(SearchResult)
 admin.site.register(SearchConsoleData)
 admin.site.register(DomainVerification)
+admin.site.register(Domain)
+admin.site.register(GoogleSearchConsoleToken)
+admin.site.register(GoogleToken)
+admin.site.register(GoogleSearchConsoleTokenData)
+

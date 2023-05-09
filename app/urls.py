@@ -2,6 +2,7 @@ from django.urls import path
 from rest_framework_simplejwt import views as jwt_views
 from app import views
 from .views import *
+from .console import *
 # from app import ranks
 # from .ranks import *
 
@@ -23,11 +24,11 @@ urlpatterns=[
     path('show',searchdataapiview,name='show'),
     path('searchdata',views.searchdataapi,name='searchdata'),
     path('chart/',showchartapi,name='graph'),
-    path('plot/',views.plot_png,name='plot'),
+    # path('plot/',views.plot_png,name='plot'),
     path('figure/',create_figure,name='figure'),
     path('figuredata/',figure,name='figure'),
     path('mpl',mpl,name='mpl'),
-    path('d/',DataAPIView.as_view(),name='datad'),
+    # path('d/',DataAPIView.as_view(),name='datad'),
     path('country/',GetCountryAPI,name='country'),
     path('device/',GetDeviceAPI,name='device'),
     path('date/',DateAPI.as_view(),name='date'),
@@ -42,7 +43,15 @@ urlpatterns=[
     path('loginuser/',GoogleSocialAuthView.as_view(),name='google'),
     path('credential/',CustomAuthToken.as_view(),name='credebtial'),
     path('keywordlist/',KeywordListAPIView.as_view(),name='keywordlist'),
-    path('manual/',ManualSearchAPIVIew.as_view(),name='manual')
+    path('manual/',ManualSearchAPIVIew.as_view(),name='manual'),
+    path('domain/',DomainsAPIView.as_view(),name='doamain'),
+    path('google/',authenticate,name='google'),
+    path('query/',QueryFilter.as_view(),name='query'),
+    path('google_search_console_login/',google_search_console_login,name='google_search_console_login'),
+    path('google_search_console_login_redirect/',google_search_console_login_redirect,name='google_search_console_login_redirect'),
+    path('call/',googleauthcallback.as_view(),name='call')
+  
+ 
    
   
 

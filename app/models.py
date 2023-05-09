@@ -132,3 +132,26 @@ class DomainVerification(models.Model):
     verified = models.BooleanField(default=False)
 
 
+class Domain(models.Model):
+    name = models.CharField(max_length=255)
+
+
+class GoogleSearchConsoleToken(models.Model):
+    email = models.EmailField()
+    password = models.CharField(max_length=255)
+    access_token = models.CharField(max_length=255)
+
+
+
+class GoogleToken(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    access_token = models.CharField(max_length=255)
+    refresh_token = models.CharField(max_length=255)
+    expires_at = models.DateTimeField()
+
+
+class GoogleSearchConsoleTokenData(models.Model):
+    access_token = models.CharField(max_length=255)
+    refresh_token = models.CharField(max_length=255)
+
+
