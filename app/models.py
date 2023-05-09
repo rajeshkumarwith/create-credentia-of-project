@@ -151,7 +151,7 @@ class GoogleToken(models.Model):
 
 
 class GoogleSearchConsoleTokenData(models.Model):
-    access_token = models.CharField(max_length=255)
+    token = models.CharField(max_length=255)
     refresh_token = models.CharField(max_length=255)
 
 

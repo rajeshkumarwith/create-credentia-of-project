@@ -1781,8 +1781,11 @@ class DomainsAPIView(APIView):
     def post(self,request,*args,**kwargs):
         credentials = Credentials.from_service_account_file(f'{settings.BASE_DIR}/credentials.json', scopes=['https://www.googleapis.com/auth/webmasters'])
         project=request.data.get('project')
+        # Build the Search Console API client using the credentials
         search_console = build('webmasters', 'v3', credentials=credentials)
+
         try:
+            # Make the API request to verify the domain in Search Console
             response = search_console.sites().add(siteUrl='https://' + project + '/').execute()
             return Response(status=status.HTTP_200_OK)
         except HttpError as error:
@@ -1813,7 +1816,7 @@ def google_search_console_login(request):
     flow = InstalledAppFlow.from_client_secrets_file(
       f'{settings.BASE_DIR}/client.json',
         scopes=['https://www.googleapis.com/auth/webmasters.readonly'],
-        redirect_uri='http://localhost:8000/search-console/callback',
+        redirect_uri='https://app.doddlehq.com/google-auth',
         state=request.session.session_key,
        
     )
@@ -1834,7 +1837,7 @@ def google_search_console_login_redirect(request):
     flow = InstalledAppFlow.from_client_secrets_file(
        f'{settings.BASE_DIR}/client.json',
         scopes=['https://www.googleapis.com/auth/webmasters.readonly'],
-        redirect_uri='http://localhost:8000/search-console/callback',
+        redirect_uri='https://app.doddlehq.com/google-auth',
         state=request.session.get('google_state'),
     )
     # exchange the authorization code for an access token and refresh token
@@ -1854,65 +1857,3 @@ def google_search_console_login_redirect(request):
 
     # redirect the user to the homepage
     return redirect('/')
-
-
-class QueryFilter(APIView):
-    pagination_class = CustomPagination
-    def get(self,request,*args,**kwargs):
-            start_date = self.request.query_params.get('start_date')
-            end_date = self.request.query_params.get('end_date')
-            query=self.request.query_params.get('query')
-            if start_date and end_date:
-                pass
-            else:
-                start_date = "2022-03-01"
-                end_date = "2022-03-15"
-            # country=request.data.get('country')
-            # device=request.data.get('device')
-            # page=request.data.get('page')
-            scopes = ['https://www.googleapis.com/auth/webmasters']
-            service = authenticate(scopes)
-            sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:hptourtravel.com').execute()
-            service = authenticate(scopes)
-            list=[]
-            print(service,'sssssssssss')
-            request = {
-                "startDate": start_date,
-                "endDate": end_date,
-                # 'query':query,
-                "dimensions": ['query'],
-            "rowLimit": 20
-            }
-            # gsc_search_analytics = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
-            # df = pd.DataFrame(gsc_search_analytics['rows'])
-            response = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
-            df=pd.DataFrame(response['rows'])
-            # list=[]
-            data=[]
-            for row in response['rows']:
-                # query=row['keys'][0]
-               
-                clicks=row['clicks']
-                ctr=row['ctr']
-                impressions=row['impressions']
-                position=row['position']
-                data.append({
-                    'query':query,
-                    'clicks':clicks,
-                    'ctr':ctr,
-                    'impressions':impressions,
-                    'position':position
-                })
-            # query=response['rows']['keys']
-            print(query,'qqqqqqqqqqqq')
-            # df = pd.DataFrame(data, columns=['page', 'clicks', 'impressions', 'ctr','position'])
-            df=pd.DataFrame(data)
-            df['ctr']=df['ctr'].round(2)
-            df['position']=df['position'].round(2)
-            df['impressions']=df['impressions'].round(2)
-            final_row_data=[]
-            for index ,rows in df.iterrows():
-                final_row_data.append(rows.to_dict())
-            return Response(final_row_data)
-    
-

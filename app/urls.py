@@ -49,7 +49,7 @@ urlpatterns=[
     path('query/',QueryFilter.as_view(),name='query'),
     path('google_search_console_login/',google_search_console_login,name='google_search_console_login'),
     path('google_search_console_login_redirect/',google_search_console_login_redirect,name='google_search_console_login_redirect'),
-    path('call/',googleauthcallback.as_view(),name='call')
+    # path('call/',googleauthcallback.as_view(),name='call')
   
  
    

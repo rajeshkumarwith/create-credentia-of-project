@@ -35,16 +35,6 @@ from django.contrib.auth.hashers import check_password
 from .paginations import *
 from django.contrib.auth.models import User
 
-        
-from django.shortcuts import redirect
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import Flow
-from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
-from googleapiclient.discovery import build
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-
 # Create your views here.
 
 
@@ -1667,7 +1657,32 @@ class RemoveSearch(APIView):
         SearchConsoleData.objects.all().delete()
         return Response({'msg':'remove all data'})
 
+# from apiclient import discovery
+# import httplib2
+# from oauth2client import client
 
+# class SearchData(APIView):
+#     def get(self,request,*args,**kwargs):
+#         if not request.headers.get('X-Requested-With'):
+#             abort(403)
+
+#         CURR_DIR  ='/home/ocode-22/Documents/dockerwithdjango/project'
+
+#         # Exchange auth code for access token, refresh token, and ID token
+#         credentials = client.credentials_from_clientsecrets_and_code(
+#              str(CURR_DIR)+'/credentials.json',
+#             ['https://www.googleapis.com/auth/drive.appdata', 'profile', 'email'],
+#             auth_code)
+
+#         # Call Google API
+#         http_auth = credentials.authorize(httplib2.Http())
+#         drive_service = discovery.build('drive', 'v3', http=http_auth)
+#         appfolder = drive_service.files().get(fileId='appfolder').execute()
+
+#         # Get profile info from ID token
+#         userid = credentials.id_token['sub']
+#         email = credentials.id_token['email']
+#         return Response(email)
     
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
@@ -1715,22 +1730,19 @@ SCOPES = ['https://www.googleapis.com/auth/webmasters']
 class GoogleSearchConsoleView(APIView):
     def get(self, request):
         # Get the credentials object from Django settings
-        # creds_data =f'{settings.BASE_DIR}/credentials.json'
-        creds_data = {
-            'client_id': '286943146870-h21okc0jtogcva4mrmi28h4fpkcaagum.apps.googleusercontent.com',
-            'client_secret': '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',
-            'refresh_token': '1//0gLX0PkyUHAY_CgYIARAAGBASNwF-L9IrrUh_FA_fo8Lswlhj2hKdx78QCfjZG8kbYLjRHUFuIeDoF3BBMCcXXIuCOo8ycCzkJcc',
-            'token_uri': 'https://oauth2.googleapis.com/token'
-        }
-
-        # creds = Credentials.from_authorized_user_info(info=creds_data, scopes=SCOPES)
-        creds = Credentials.from_authorized_user_info(creds_data)
-
+        creds_data =f'{settings.BASE_DIR}/credentials.json'
+        creds = Credentials.from_authorized_user_info(info=creds_data, scopes=SCOPES)
 
         # Refresh the token if it has expired
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
+
+        # Get the access token
         access_token = creds.token
+
+        # Make your API requests using the access token
+        # ...
+
         return Response({'access_token': access_token})
 
 from django.conf import settings
@@ -1775,6 +1787,16 @@ def domains(request):
 #             return Response({'status': 'error', 'message': 'An error occurred while verifying the domain.'})
 
        
+        
+from django.shortcuts import redirect
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import Flow
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+from googleapiclient.discovery import build
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
 
 
 @api_view(['GET'])
@@ -1795,52 +1817,12 @@ def google_auth(request):
     return redirect(authorization_url)
 
 
-def google_auth(request):
-    flow = Flow.from_client_secrets_file(
-       f'{settings.BASE_DIR}/client.json',
-        scopes=['https://www.googleapis.com/auth/webmasters.readonly'],
-        redirect_uri='http://localhost:8000/search-console/callback',
-    )
-    auth_url, _ = flow.authorization_url(prompt='consent')
-    return redirect(auth_url)
+
+  
 
 
-# def google_auth_callback(request):
-#     flow = Flow.from_client_secrets_file(
-#         f'{settings.BASE_DIR}/client.json',
-#         scopes=['https://www.googleapis.com/auth/webmasters.readonly'],
-#         redirect_uri='http://localhost:8000/search-console/callback',
-#     )
-#     print(flow,'ffffffffffffff')
-#     flow.fetch_token(authorization_response=request.get_full_path())
-#     credentials = flow.credentials
-#     print(credentials,'ccccccccc')
-#     GoogleSearchConsoleTokenData.objects.create(
-#         # user=request.user,
-#         access_token=credentials.access_token,
-#         refresh_token=credentials.refresh_token,
-     
-#     )
-#     return redirect('/')
 
-class googleauthcallback(APIView):
-    def get(self,request,*args,**kwargs):
-        flow = Flow.from_client_secrets_file(
-            f'{settings.BASE_DIR}/client.json',
-            scopes=['https://www.googleapis.com/auth/webmasters.readonly'],
-            redirect_uri='http://localhost:8000/search-console/callback',
-        )
-        print(flow,'ffffffffffffff')
-        flow.fetch_token(authorization_response=request.get_full_path())
-        credentials = flow.credentials
-        print(credentials,'ccccccccc')
-        GoogleSearchConsoleTokenData.objects.create(
-            # user=request.user,
-            access_token=credentials.access_token,
-            refresh_token=credentials.refresh_token,
-        
-        )
-        return Response({'msg':'successfully created'})
+
 
 
 
