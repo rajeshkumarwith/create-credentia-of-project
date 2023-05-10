@@ -50,7 +50,9 @@ urlpatterns=[
     path('google_search_console_login/',google_search_console_login,name='google_search_console_login'),
     path('google_search_console_login_redirect/',google_search_console_login_redirect,name='google_search_console_login_redirect'),
     path('data/',gsc_auth,name='call'),
-    path('token/',TokenDataApi.as_view(),name='token')
+    path('token/',TokenDataApi.as_view(),name='token'),
+    path('weekly/',SearchAPIView.as_view(),name='weekly'),
+    # path('get_credentials/',get_credentials,name='get_credentials')
   
  
    
