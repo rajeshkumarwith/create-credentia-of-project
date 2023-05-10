@@ -41,6 +41,12 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from django.views.decorators.csrf import csrf_exempt
 
+
+import google.auth
+from google.auth.transport.requests import Request
+from google_auth_oauthlib.flow import InstalledAppFlow
+import json
+
 # Create your views here.
 
 
@@ -116,35 +122,34 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 
 # 'credentials.json'={"installed":{"client_id":"695543285061-mnt3b45di36ua2pugvthvadbqabnijo8.apps.googleusercontent.com","project_id":"hptourtravel1","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_secret":"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","redirect_uris":["http://localhost"]}}
-CURR_DIR ='/home/ocode-22/Documents/dockerwithdjango/project/app/'
-TOKEN_DIR='/home/ocode-22/Documents/dockerwithdjango/project/TOKEN_FILE'
-# CURR_DIR ='/home/ocode-22/Documents/google search api/project/app/credentials.json'
+@api_view(['GET',])
 def gsc_auth(scopes):
+    scopes = ['https://www.googleapis.com/auth/webmasters']
     creds = None
     # The file token.json stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
-    # time.
-    if os.path.exists('TOKEN_FILE'):
-        creds = Credentials.from_authorized_user_file('TOKEN_FILE', scopes)
+    # # time.
+    # if os.path.exists('token.json'):
+    #     creds = Credentials.from_authorized_user_file('token.json', scopes)
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
-                str(CURR_DIR)+'/credentials.json', scopes)
+                f'{settings.BASE_DIR}/client.json', scopes)
             creds = flow.run_local_server(port=0)
-        # Save the credentials for the next run
-        with open('TOKEN_FILE', 'w') as token:
+        with open(f'{settings.BASE_DIR}/token.json', 'w') as token:
             token.write(creds.to_json())
 
+            print("Access Token: ", creds.token)
+            print("Refresh Token: ", creds.refresh_token)
     service = build('searchconsole', 'v1', credentials=creds)
 
-    return service
+    return Response(service)
+# scopes = ['https://www.googleapis.com/auth/webmasters']
 
-scopes = ['https://www.googleapis.com/auth/webmasters']
-
-service = gsc_auth(scopes)
+# service = gsc_auth(scopes)
 
 # @api_view(['GET'])
 # def data(request):
@@ -186,48 +191,156 @@ service = gsc_auth(scopes)
 #     # return Response(column_names)
 #     return Response(output_rows)
 
-@api_view(['GET'])
-def GetCountryAPI(request):
-    scopes = ['https://www.googleapis.com/auth/webmasters']
-    service = gsc_auth(scopes)
-    sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:hptourtravel.com').execute()
-    service = gsc_auth(scopes)
-    list=[]
-    print(service,'sssssssssss')
-    request = {
-        "startDate": "2022-03-01",
-        "endDate": "2022-03-15",
-        "dimensions": [
-        "QUERY","Country"
-    ],
-    "rowLimit": 25000
-    }
-    gsc_search_analytics = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
-    df = pd.DataFrame(gsc_search_analytics['rows'])
-    response = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
 
-    output_rows=[]
-    for row in response['rows']:
-            # keyword=row['keys'][0]
-            # page = row['keys'][1]
-            country = row['keys'][1]
-            # device = row['keys']
-            output_row = [ country,  row['clicks'], row['impressions'], row['ctr'], row['position']]
-            output_rows.append(output_row)
-    if "rows" in response:
-        df['country'] =response["rows"][1]["keys"][1]
-    df = pd.DataFrame(output_rows, columns=['country', 'clicks', 'impressions', 'ctr','position'])
-    # df['country']=df['country'].str.get('country')
-    # df['country']=df['country'].str.get(0)
-    df['country']=df['country'].str.capitalize()
-    df['ctr']=df['ctr'].round(2)
-    df['position']=df['position'].round(2)
-    df['impressions']=df['impressions'].round(2)
-    final_row_data=[]
-    for index ,rows in df.iterrows():
-        final_row_data.append(rows.to_dict())
-    # return Response(output_rows)
-    return Response(final_row_data)
+# @api_view(['GET',])
+# def gcd_auth(scopes):
+#     scopes = ['https://www.googleapis.com/auth/webmasters.readonly']
+#     flow = InstalledAppFlow.from_client_secrets_file(
+#                 f'{settings.BASE_DIR}/client.json', scopes=scopes)
+
+#     creds = None
+#     if not creds or not creds.valid:
+#         if creds and creds.expired and creds.refresh_token:
+#                 creds.refresh(Request())
+#         else:
+#             flow.run_local_server(port=0)
+#             creds = flow.credentials
+#         with open('token.json', 'w') as token:
+#             token.write(creds.to_json())
+#         service=build('searchconsole', 'v1',credentials=creds)
+#             # Print the access token and refresh token
+#         print("Access Token: ", creds.token)
+#         print("Refresh Token: ", creds.refresh_token)
+#         print('email:',creds)
+#         return service
+
+
+
+
+class TokenDataApi(APIView):
+    def get(self,request,*args,**kwargs):
+        scopes = ['https://www.googleapis.com/auth/webmasters.readonly']
+
+        flow = InstalledAppFlow.from_client_secrets_file(
+             f'{settings.BASE_DIR}/client.json', scopes=scopes)
+
+        creds = None
+        if not creds or not creds.valid:
+            if creds and creds.expired and creds.refresh_token:
+                creds.refresh(Request())
+            else:
+                flow.run_local_server(port=0)
+                creds = flow.credentials
+        GoogleSearchConsoleTokenData.objects.create(token=creds.token,refresh_token=creds.refresh_token,token_uri=creds.token_uri,client_id=creds.client_id,client_secret=creds.client_secret,
+                                                    scopes=creds.scopes,expiry=creds.expiry)
+
+        service=build('searchconsole', 'v1',credentials=creds)
+        print(type(service))
+        # Print the access token and refresh token
+        print("Access Token: ", creds.token)
+        print("Refresh Token: ", creds.refresh_token)
+        print('token_uri:',creds.token_uri)
+        print('client_id',creds.client_id)
+        print('client_secret',creds.client_secret)
+        print('scopes',creds.scopes)
+        print('expiry',creds.expiry)
+        return Response({'AccessToken':creds.token,'RefreshToken':creds.refresh_token})
+        # return Response(service)
+     
+class GetCountryAPI(APIView):
+    # permission_classes = (AllowAny,)
+    def get(self,request,*args,**kwargs):
+        scopes = ['https://www.googleapis.com/auth/webmasters']
+        service = gcd_auth(scopes)
+        # service=TokenDataApi.as_view()
+        project=request.data.get('project')
+        sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:' + str(project)).execute()
+        # service = gcd_auth(scopes)
+        # service=TokenDataApi.as_view()(scopes)
+        list=[]
+        print(service,'sssssssssss')
+        request = {
+            "startDate": "2022-03-01",
+            "endDate": "2022-03-15",
+            "dimensions": [
+            "QUERY","Country"
+        ],
+        "rowLimit": 25000
+        }
+        gsc_search_analytics = service.searchanalytics().query(siteUrl='sc-domain:' +str(project), body=request).execute()
+        df = pd.DataFrame(gsc_search_analytics['rows'])
+        response = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
+
+        output_rows=[]
+        for row in response['rows']:
+                # keyword=row['keys'][0]
+                # page = row['keys'][1]
+                country = row['keys'][1]
+                # device = row['keys']
+                output_row = [ country,  row['clicks'], row['impressions'], row['ctr'], row['position']]
+                output_rows.append(output_row)
+        if "rows" in response:
+            df['country'] =response["rows"][1]["keys"][1]
+        df = pd.DataFrame(output_rows, columns=['country', 'clicks', 'impressions', 'ctr','position'])
+        # df['country']=df['country'].str.get('country')
+        # df['country']=df['country'].str.get(0)
+        df['country']=df['country'].str.capitalize()
+        df['ctr']=df['ctr'].round(2)
+        df['position']=df['position'].round(2)
+        df['impressions']=df['impressions'].round(2)
+        final_row_data=[]
+        for index ,rows in df.iterrows():
+            final_row_data.append(rows.to_dict())
+        # return Response(output_rows)
+        return Response(final_row_data)
+       
+
+
+
+# @api_view(['GET'])
+# def GetCountryAPI(request):
+#     scopes = ['https://www.googleapis.com/auth/webmasters']
+#     # service = gcd_auth(scopes)
+#     service=TokenDataApi.as_view()(request,scopes)
+#     sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:hptourtravel.com').execute()
+#     # service =gcd_auth (scopes)
+    
+#     list=[]
+#     print(service,'sssssssssss')
+#     request = {
+#         "startDate": "2022-03-01",
+#         "endDate": "2022-03-15",
+#         "dimensions": [
+#         "QUERY","Country"
+#     ],
+#     "rowLimit": 25000
+#     }
+#     gsc_search_analytics = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
+#     df = pd.DataFrame(gsc_search_analytics['rows'])
+#     response = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
+
+#     output_rows=[]
+#     for row in response['rows']:
+#             # keyword=row['keys'][0]
+#             # page = row['keys'][1]
+#             country = row['keys'][1]
+#             # device = row['keys']
+#             output_row = [ country,  row['clicks'], row['impressions'], row['ctr'], row['position']]
+#             output_rows.append(output_row)
+#     if "rows" in response:
+#         df['country'] =response["rows"][1]["keys"][1]
+#     df = pd.DataFrame(output_rows, columns=['country', 'clicks', 'impressions', 'ctr','position'])
+#     # df['country']=df['country'].str.get('country')
+#     # df['country']=df['country'].str.get(0)
+#     df['country']=df['country'].str.capitalize()
+#     df['ctr']=df['ctr'].round(2)
+#     df['position']=df['position'].round(2)
+#     df['impressions']=df['impressions'].round(2)
+#     final_row_data=[]
+#     for index ,rows in df.iterrows():
+#         final_row_data.append(rows.to_dict())
+#     # return Response(output_rows)
+#     return Response(final_row_data)
 
 @api_view(['GET'])
 def GetDeviceAPI(request):
@@ -639,32 +752,32 @@ from httplib2 import Http
 
 
 
-def gsc_auth(scopes):
-    creds = None
-    # The file token.json stores the user's access and refresh tokens, and is
-    # created automatically when the authorization flow completes for the first
-    # time.
-    if os.path.exists('TOKEN_FILE'):
-        creds = Credentials.from_authorized_user_file('TOKEN_FILE', scopes)
-    # If there are no (valid) credentials available, let the user log in.
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                str(CURR_DIR)+'/credentials.json', scopes)
-            creds = flow.run_local_server(port=0)
-        # Save the credentials for the next run
-        with open('TOKEN_FILE', 'w') as token:
-            token.write(creds.to_json())
+# def gsc_auth(scopes):
+#     creds = None
+#     # The file token.json stores the user's access and refresh tokens, and is
+#     # created automatically when the authorization flow completes for the first
+#     # time.
+#     if os.path.exists('TOKEN_FILE'):
+#         creds = Credentials.from_authorized_user_file('TOKEN_FILE', scopes)
+#     # If there are no (valid) credentials available, let the user log in.
+#     if not creds or not creds.valid:
+#         if creds and creds.expired and creds.refresh_token:
+#             creds.refresh(Request())
+#         else:
+#             flow = InstalledAppFlow.from_client_secrets_file(
+#                 str(CURR_DIR)+'/credentials.json', scopes)
+#             creds = flow.run_local_server(port=0)
+#         # Save the credentials for the next run
+#         with open('TOKEN_FILE', 'w') as token:
+#             token.write(creds.to_json())
 
-    service = build('searchconsole', 'v1', credentials=creds)
+#     service = build('searchconsole', 'v1', credentials=creds)
 
-    return service
+#     return service
 
-scopes = ['https://www.googleapis.com/auth/webmasters']
+# scopes = ['https://www.googleapis.com/auth/webmasters']
 
-service = gsc_auth(scopes)
+# service = gsc_auth(scopes)
 
 
 # def searchdata(request):
@@ -878,64 +991,64 @@ def searchdataapi(request):
   return render(request,'show.html',context)
 from django.utils import timezone
 
-class TopqueriesAPI(viewsets.ModelViewSet):
-    serializer_class=ProfileDataSerializer
-    pagination_class = CustomPagination
-    def get_queryset(self):
-            start_date = self.request.query_params.get('start_date')
-            end_date = self.request.query_params.get('end_date')
-            if start_date and end_date:
-                pass
-            else:
-                start_date = "2022-03-01"
-                end_date = "2022-03-15"
-            country=self.request.query_params.get('country')
-            device=self.request.query_params.get('device')
-            page=self.request.query_params.get('page')
-            scopes = ['https://www.googleapis.com/auth/webmasters']
-            service = gsc_auth(scopes)
-            sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:hptourtravel.com').execute()
-            service = gsc_auth(scopes)
-            list=[]
-            print(service,'sssssssssss')
-            request = {
-                "startDate": start_date,
-                "endDate": end_date,
-                "dimensions": ['query', 'country', 'device', 'page'],
-            "rowLimit": 25000
-            }
-            response = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
-            df=pd.DataFrame(response['rows'])
-            # list=[]
-            data=[]
-            for row in response['rows']:
-                query=row['keys'][0]
-                country=row['keys'][1]
-                device=row['keys'][2]
-                page=row['keys'][3]
-                clicks=row['clicks']
-                ctr=row['ctr']
-                impressions=row['impressions']
-                position=row['position']
-                data.append({
-                    'query':query,
-                    'country':country,
-                    'device':device,
-                    'page':page,
-                    'clicks':clicks,
-                    'ctr':ctr,
-                    'impressions':impressions,
-                    'position':position
-                })
-            # df = pd.DataFrame(data, columns=['page', 'clicks', 'impressions', 'ctr','position'])
-            df=pd.DataFrame(data)
-            df['ctr']=df['ctr'].round(2)
-            df['position']=df['position'].round(2)
-            df['impressions']=df['impressions'].round(2)
-            final_row_data=[]
-            for index ,rows in df.iterrows():
-                final_row_data.append(rows.to_dict())
-            return final_row_data
+# class TopqueriesAPI(viewsets.ModelViewSet):
+#     serializer_class=ProfileDataSerializer
+#     pagination_class = CustomPagination
+#     def get_queryset(self):
+#             start_date = self.request.query_params.get('start_date')
+#             end_date = self.request.query_params.get('end_date')
+#             if start_date and end_date:
+#                 pass
+#             else:
+#                 start_date = "2022-03-01"
+#                 end_date = "2022-03-15"
+#             country=self.request.query_params.get('country')
+#             device=self.request.query_params.get('device')
+#             page=self.request.query_params.get('page')
+#             scopes = ['https://www.googleapis.com/auth/webmasters']
+#             service = gsc_auth(scopes)
+#             sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:hptourtravel.com').execute()
+#             service = gsc_auth(scopes)
+#             list=[]
+#             print(service,'sssssssssss')
+#             request = {
+#                 "startDate": start_date,
+#                 "endDate": end_date,
+#                 "dimensions": ['query', 'country', 'device', 'page'],
+#             "rowLimit": 25000
+#             }
+#             response = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
+#             df=pd.DataFrame(response['rows'])
+#             # list=[]
+#             data=[]
+#             for row in response['rows']:
+#                 query=row['keys'][0]
+#                 country=row['keys'][1]
+#                 device=row['keys'][2]
+#                 page=row['keys'][3]
+#                 clicks=row['clicks']
+#                 ctr=row['ctr']
+#                 impressions=row['impressions']
+#                 position=row['position']
+#                 data.append({
+#                     'query':query,
+#                     'country':country,
+#                     'device':device,
+#                     'page':page,
+#                     'clicks':clicks,
+#                     'ctr':ctr,
+#                     'impressions':impressions,
+#                     'position':position
+#                 })
+#             # df = pd.DataFrame(data, columns=['page', 'clicks', 'impressions', 'ctr','position'])
+#             df=pd.DataFrame(data)
+#             df['ctr']=df['ctr'].round(2)
+#             df['position']=df['position'].round(2)
+#             df['impressions']=df['impressions'].round(2)
+#             final_row_data=[]
+#             for index ,rows in df.iterrows():
+#                 final_row_data.append(rows.to_dict())
+#             return final_row_data
        
 from rest_framework import status
 
@@ -1357,7 +1470,7 @@ from googleapiclient.discovery import build
 class SearchConsoleAPIView(APIView):
     def get(self, request, *args, **kwargs):
         scopes = ['https://www.googleapis.com/auth/webmasters']
-        service = gsc_auth(scopes)
+        service = gcd_auth(scopes)
         project=self.request.query_params.get('project')
         sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:' +str(project)).execute()
         service = gsc_auth(scopes)
@@ -1604,7 +1717,7 @@ class SearchConsoleDataView(APIView):
     def post(self, request, format=None):
         project=request.data['project']
         scopes = ['https://www.googleapis.com/auth/webmasters']
-        service = gsc_auth(scopes)
+        service = gcd_auth(scopes)
         # Call the Google Search Console API to retrieve data
         try:
             response = service.searchanalytics().query(
@@ -1857,3 +1970,91 @@ def google_search_console_login_redirect(request):
 
     # redirect the user to the homepage
     return redirect('/')
+
+
+# def gsc_auth(scopes):
+#     creds = None
+#     if os.path.exists('TOKEN_FILE'):
+#         creds = Credentials.from_authorized_user_file('TOKEN_FILE', scopes)
+#     # If there are no (valid) credentials available, let the user log in.
+#     if not creds or not creds.valid:
+#         if creds and creds.expired and creds.refresh_token:
+#             creds.refresh(Request())
+#         else:
+#             flow = InstalledAppFlow.from_client_secrets_file(
+#                 str(CURR_DIR)+'/credentials.json', scopes)
+#             creds = flow.run_local_server(port=0)
+#         # Save the credentials for the next run
+#         with open('TOKEN_FILE', 'w') as token:
+#             token.write(creds.to_json())
+
+#     service = build('searchconsole', 'v1', credentials=creds)
+
+#     return service
+
+# scopes = ['https://www.googleapis.com/auth/webmasters']
+
+# service = gsc_auth(scopes)
+
+
+
+class TopqueriesAPI(viewsets.ModelViewSet):
+    serializer_class=ProfileDataSerializer
+    pagination_class = CustomPagination
+    def get_queryset(self):
+            start_date = self.request.query_params.get('start_date')
+            end_date = self.request.query_params.get('end_date')
+            if start_date and end_date:
+                pass
+            else:
+                start_date = "2022-03-01"
+                end_date = "2022-03-15"
+            country=self.request.query_params.get('country')
+            device=self.request.query_params.get('device')
+            page=self.request.query_params.get('page')
+            scopes = ['https://www.googleapis.com/auth/webmasters']
+            service = gcd_auth(scopes)
+            sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:hptourtravel.com').execute()
+            service = gcd_auth(scopes)
+            list=[]
+            print(service,'sssssssssss')
+            request = {
+                "startDate": start_date,
+                "endDate": end_date,
+                "dimensions": ['query', 'country', 'device', 'page'],
+            "rowLimit": 25000
+            }
+            response = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
+            df=pd.DataFrame(response['rows'])
+            # list=[]
+            data=[]
+            for row in response['rows']:
+                query=row['keys'][0]
+                country=row['keys'][1]
+                device=row['keys'][2]
+                page=row['keys'][3]
+                clicks=row['clicks']
+                ctr=row['ctr']
+                impressions=row['impressions']
+                position=row['position']
+                data.append({
+                    'query':query,
+                    'country':country,
+                    'device':device,
+                    'page':page,
+                    'clicks':clicks,
+                    'ctr':ctr,
+                    'impressions':impressions,
+                    'position':position
+                })
+            # df = pd.DataFrame(data, columns=['page', 'clicks', 'impressions', 'ctr','position'])
+            df=pd.DataFrame(data)
+            df['ctr']=df['ctr'].round(2)
+            df['position']=df['position'].round(2)
+            df['impressions']=df['impressions'].round(2)
+            final_row_data=[]
+            for index ,rows in df.iterrows():
+                final_row_data.append(rows.to_dict())
+            return final_row_data
+       
+

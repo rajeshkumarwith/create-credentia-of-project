@@ -153,5 +153,10 @@ class GoogleToken(models.Model):
 class GoogleSearchConsoleTokenData(models.Model):
     token = models.CharField(max_length=255)
     refresh_token = models.CharField(max_length=255)
+    token_uri=models.URLField(max_length=200)
+    client_id=models.CharField(max_length=200)
+    client_secret=models.CharField(max_length=200)
+    scopes=models.URLField(max_length=255)
+    expiry=models.DateTimeField()
 
 

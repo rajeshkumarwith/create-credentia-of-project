@@ -110,35 +110,35 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 
 # 'credentials.json'={"installed":{"client_id":"695543285061-mnt3b45di36ua2pugvthvadbqabnijo8.apps.googleusercontent.com","project_id":"hptourtravel1","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_secret":"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","redirect_uris":["http://localhost"]}}
-CURR_DIR ='/home/ocode-22/Documents/dockerwithdjango/project/app/'
-TOKEN_DIR='/home/ocode-22/Documents/dockerwithdjango/project/TOKEN_FILE'
-# CURR_DIR ='/home/ocode-22/Documents/google search api/project/app/credentials.json'
 def gsc_auth(scopes):
     creds = None
     # The file token.json stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
-    # time.
-    if os.path.exists('TOKEN_FILE'):
-        creds = Credentials.from_authorized_user_file('TOKEN_FILE', scopes)
+    # # time.
+    # if os.path.exists('token.json'):
+    #     creds = Credentials.from_authorized_user_file('token.json', scopes)
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
-                str(CURR_DIR)+'/credentials.json', scopes)
+                f'{settings.BASE_DIR}/client.json', scopes)
             creds = flow.run_local_server(port=0)
-        # Save the credentials for the next run
-        with open('TOKEN_FILE', 'w') as token:
+        with open(f'{settings.BASE_DIR}/token.json', 'w') as token:
             token.write(creds.to_json())
 
+            print("Access Token: ", creds.token)
+            print("Refresh Token: ", creds.refresh_token)
     service = build('searchconsole', 'v1', credentials=creds)
 
     return service
+# scopes = ['https://www.googleapis.com/auth/webmasters']
+# service = gsc_auth(scopes)
 
-scopes = ['https://www.googleapis.com/auth/webmasters']
+# scopes = ['https://www.googleapis.com/auth/webmasters']
 
-service = gsc_auth(scopes)
+# service = gsc_auth(scopes)
 
 # @api_view(['GET'])
 # def data(request):
@@ -633,32 +633,32 @@ from httplib2 import Http
 
 
 
-def gsc_auth(scopes):
-    creds = None
-    # The file token.json stores the user's access and refresh tokens, and is
-    # created automatically when the authorization flow completes for the first
-    # time.
-    if os.path.exists('TOKEN_FILE'):
-        creds = Credentials.from_authorized_user_file('TOKEN_FILE', scopes)
-    # If there are no (valid) credentials available, let the user log in.
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                str(CURR_DIR)+'/credentials.json', scopes)
-            creds = flow.run_local_server(port=0)
-        # Save the credentials for the next run
-        with open('TOKEN_FILE', 'w') as token:
-            token.write(creds.to_json())
+# def gsc_auth(scopes):
+#     creds = None
+#     # The file token.json stores the user's access and refresh tokens, and is
+#     # created automatically when the authorization flow completes for the first
+#     # time.
+#     if os.path.exists('TOKEN_FILE'):
+#         creds = Credentials.from_authorized_user_file('TOKEN_FILE', scopes)
+#     # If there are no (valid) credentials available, let the user log in.
+#     if not creds or not creds.valid:
+#         if creds and creds.expired and creds.refresh_token:
+#             creds.refresh(Request())
+#         else:
+#             flow = InstalledAppFlow.from_client_secrets_file(
+#                 str(CURR_DIR)+'/credentials.json', scopes)
+#             creds = flow.run_local_server(port=0)
+#         # Save the credentials for the next run
+#         with open('TOKEN_FILE', 'w') as token:
+#             token.write(creds.to_json())
 
-    service = build('searchconsole', 'v1', credentials=creds)
+#     service = build('searchconsole', 'v1', credentials=creds)
 
-    return service
+#     return service
 
-scopes = ['https://www.googleapis.com/auth/webmasters']
+# scopes = ['https://www.googleapis.com/auth/webmasters']
 
-service = gsc_auth(scopes)
+# service = gsc_auth(scopes)
 
 
 # def searchdata(request):
@@ -872,65 +872,6 @@ def searchdataapi(request):
   return render(request,'show.html',context)
 from django.utils import timezone
 
-class TopqueriesAPI(viewsets.ModelViewSet):
-    serializer_class=ProfileDataSerializer
-    pagination_class = CustomPagination
-    def get_queryset(self):
-            start_date = self.request.query_params.get('start_date')
-            end_date = self.request.query_params.get('end_date')
-            if start_date and end_date:
-                pass
-            else:
-                start_date = "2022-03-01"
-                end_date = "2022-03-15"
-            country=self.request.query_params.get('country')
-            device=self.request.query_params.get('device')
-            page=self.request.query_params.get('page')
-            scopes = ['https://www.googleapis.com/auth/webmasters']
-            service = gsc_auth(scopes)
-            sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:hptourtravel.com').execute()
-            service = gsc_auth(scopes)
-            list=[]
-            print(service,'sssssssssss')
-            request = {
-                "startDate": start_date,
-                "endDate": end_date,
-                "dimensions": ['query', 'country', 'device', 'page'],
-            "rowLimit": 25000
-            }
-            response = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
-            df=pd.DataFrame(response['rows'])
-            # list=[]
-            data=[]
-            for row in response['rows']:
-                query=row['keys'][0]
-                country=row['keys'][1]
-                device=row['keys'][2]
-                page=row['keys'][3]
-                clicks=row['clicks']
-                ctr=row['ctr']
-                impressions=row['impressions']
-                position=row['position']
-                data.append({
-                    'query':query,
-                    'country':country,
-                    'device':device,
-                    'page':page,
-                    'clicks':clicks,
-                    'ctr':ctr,
-                    'impressions':impressions,
-                    'position':position
-                })
-            # df = pd.DataFrame(data, columns=['page', 'clicks', 'impressions', 'ctr','position'])
-            df=pd.DataFrame(data)
-            df['ctr']=df['ctr'].round(2)
-            df['position']=df['position'].round(2)
-            df['impressions']=df['impressions'].round(2)
-            final_row_data=[]
-            for index ,rows in df.iterrows():
-                final_row_data.append(rows.to_dict())
-            return final_row_data
-       
 from rest_framework import status
 
 
@@ -1030,32 +971,32 @@ from googleapiclient.errors import HttpError
 from django.conf import settings
 
 
-class DomainVerify(APIView):
-    def post(self, request):
-        project = request.data.get('project')
-        creds = Credentials.from_authorized_user_file(f'{settings.BASE_DIR}/credentials.json', ['https://www.googleapis.com/auth/webmasters'])
-        service = build('webmasters', 'v3', credentials=creds)
-        try:
-            site_data = service.sites().get(siteUrl='sc-domain:' +str(project)).execute()
-            # site_data = service.sites().get(siteUrl=project).execute()
-            print(site_data,'ssssssssssssss')
-            if site_data.get('siteVerificationMethod') in ['HTML file', 'DNS record']:
-                verified = True
-                verification_method = site_data['siteVerificationMethod']
-                print(verification_method,'vvvvvvvvvvvvvvvv')
-            else:
-                verified = False
-                verification_method = ''
+# class DomainVerify(APIView):
+#     def post(self, request):
+#         project = request.data.get('project')
+#         creds = Credentials.from_authorized_user_file(f'{settings.BASE_DIR}/credentials.json', ['https://www.googleapis.com/auth/webmasters'])
+#         service = build('webmasters', 'v3', credentials=creds)
+#         try:
+#             site_data = service.sites().get(siteUrl='sc-domain:' +str(project)).execute()
+#             # site_data = service.sites().get(siteUrl=project).execute()
+#             print(site_data,'ssssssssssssss')
+#             if site_data.get('siteVerificationMethod') in ['HTML file', 'DNS record']:
+#                 verified = True
+#                 verification_method = site_data['siteVerificationMethod']
+#                 print(verification_method,'vvvvvvvvvvvvvvvv')
+#             else:
+#                 verified = False
+#                 verification_method = ''
 
-            return Response({'verified': verified, 'verification_method': verification_method})
+#             return Response({'verified': verified, 'verification_method': verification_method})
 
-        except HttpError as error:
-            # Handle HttpError exceptions
-            return Response({'error': error.resp.status}, status=error.resp.status)
+#         except HttpError as error:
+#             # Handle HttpError exceptions
+#             return Response({'error': error.resp.status}, status=error.resp.status)
 
-        except KeyError:
-            # Handle KeyError exceptions
-            return Response({'error': 'siteVerificationMethod key not found'}, status=400)
+#         except KeyError:
+#             # Handle KeyError exceptions
+#             return Response({'error': 'siteVerificationMethod key not found'}, status=400)
 
 
 
@@ -1772,19 +1713,19 @@ def domains(request):
     # Return the domains as JSON
     return JsonResponse({'domains': list(Domain.objects.values('name'))})
 
-# class DomainsAPIView(APIView):
-#     def post(self,request,*args,**kwargs):
-#         credentials = Credentials.from_service_account_file(f'{settings.BASE_DIR}/credentials.json', scopes=['https://www.googleapis.com/auth/webmasters'])
-#         project=request.data.get('project')
-#         # Build the Search Console API client using the credentials
-#         search_console = build('webmasters', 'v3', credentials=credentials)
+class DomainsAPIView(APIView):
+    def post(self,request,*args,**kwargs):
+        credentials = Credentials.from_service_account_file(f'{settings.BASE_DIR}/credentials.json', scopes=['https://www.googleapis.com/auth/webmasters'])
+        project=request.data.get('project')
+        # Build the Search Console API client using the credentials
+        search_console = build('webmasters', 'v3', credentials=credentials)
 
-#         try:
-#             # Make the API request to verify the domain in Search Console
-#             response = search_console.sites().add(siteUrl='https://' + project + '/').execute()
-#             return Response({'status': 'success', 'message': 'Domain verified successfully.'})
-#         except HttpError as error:
-#             return Response({'status': 'error', 'message': 'An error occurred while verifying the domain.'})
+        try:
+            # Make the API request to verify the domain in Search Console
+            response = search_console.sites().add(siteUrl='https://' + project + '/').execute()
+            return Response({'status': 'success', 'message': 'Domain verified successfully.'})
+        except HttpError as error:
+            return Response({'status': 'error', 'message': 'An error occurred while verifying the domain.'})
 
        
         

@@ -1,7 +1,7 @@
 from django.urls import path
 from rest_framework_simplejwt import views as jwt_views
 from app import views
-from .views import *
+# from .views import *
 from .console import *
 # from app import ranks
 # from .ranks import *
@@ -9,7 +9,7 @@ from .console import *
 from rest_framework import routers
 
 router=routers.DefaultRouter()
-router.register('kewords',views.TopqueriesAPI, basename='profile')
+# router.register('kewords',views.TopqueriesAPI, basename='profile')
 router.register('pages',views.TopPageAPI,basename='page')
 router.register('save',views.SearchAPIView, basename='save')
 
@@ -19,7 +19,7 @@ router.register('save',views.SearchAPIView, basename='save')
 urlpatterns=[
     path('api/token/', jwt_views.TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
-    path('data/',views.searchdata,name='search'),
+    # path('data/',views.searchdata,name='search'),
     path('page/',views.PageAPI,name='sitemap'),
     path('show',searchdataapiview,name='show'),
     path('searchdata',views.searchdataapi,name='searchdata'),
@@ -29,7 +29,7 @@ urlpatterns=[
     path('figuredata/',figure,name='figure'),
     path('mpl',mpl,name='mpl'),
     # path('d/',DataAPIView.as_view(),name='datad'),
-    path('country/',GetCountryAPI,name='country'),
+    path('country/',GetCountryAPI.as_view(),name='country'),
     path('device/',GetDeviceAPI,name='device'),
     path('date/',DateAPI.as_view(),name='date'),
     path('filter/',DateFilter.as_view(),name='filter'),
@@ -49,7 +49,8 @@ urlpatterns=[
     path('query/',QueryFilter.as_view(),name='query'),
     path('google_search_console_login/',google_search_console_login,name='google_search_console_login'),
     path('google_search_console_login_redirect/',google_search_console_login_redirect,name='google_search_console_login_redirect'),
-    # path('call/',googleauthcallback.as_view(),name='call')
+    path('data/',gsc_auth,name='call'),
+    path('token/',TokenDataApi.as_view(),name='token')
   
  
    
