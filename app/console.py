@@ -122,7 +122,7 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 
 # 'credentials.json'={"installed":{"client_id":"695543285061-mnt3b45di36ua2pugvthvadbqabnijo8.apps.googleusercontent.com","project_id":"hptourtravel1","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_secret":"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","redirect_uris":["http://localhost"]}}
-@api_view(['GET',])
+# @api_view(['GET',])
 def gsc_auth(scopes):
     scopes = ['https://www.googleapis.com/auth/webmasters']
     creds = None
@@ -146,7 +146,7 @@ def gsc_auth(scopes):
             print("Refresh Token: ", creds.refresh_token)
     service = build('searchconsole', 'v1', credentials=creds)
 
-    return Response(service)
+    return service
 # scopes = ['https://www.googleapis.com/auth/webmasters']
 
 # service = gsc_auth(scopes)
@@ -251,11 +251,11 @@ class GetCountryAPI(APIView):
     # permission_classes = (AllowAny,)
     def get(self,request,*args,**kwargs):
         scopes = ['https://www.googleapis.com/auth/webmasters']
-        service = gcd_auth(scopes)
+        service = gsc_auth(scopes)
         # service=TokenDataApi.as_view()
         project=request.data.get('project')
         sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:' + str(project)).execute()
-        # service = gcd_auth(scopes)
+        service = gsc_auth(scopes)
         # service=TokenDataApi.as_view()(scopes)
         list=[]
         print(service,'sssssssssss')
@@ -991,64 +991,64 @@ def searchdataapi(request):
   return render(request,'show.html',context)
 from django.utils import timezone
 
-# class TopqueriesAPI(viewsets.ModelViewSet):
-#     serializer_class=ProfileDataSerializer
-#     pagination_class = CustomPagination
-#     def get_queryset(self):
-#             start_date = self.request.query_params.get('start_date')
-#             end_date = self.request.query_params.get('end_date')
-#             if start_date and end_date:
-#                 pass
-#             else:
-#                 start_date = "2022-03-01"
-#                 end_date = "2022-03-15"
-#             country=self.request.query_params.get('country')
-#             device=self.request.query_params.get('device')
-#             page=self.request.query_params.get('page')
-#             scopes = ['https://www.googleapis.com/auth/webmasters']
-#             service = gsc_auth(scopes)
-#             sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:hptourtravel.com').execute()
-#             service = gsc_auth(scopes)
-#             list=[]
-#             print(service,'sssssssssss')
-#             request = {
-#                 "startDate": start_date,
-#                 "endDate": end_date,
-#                 "dimensions": ['query', 'country', 'device', 'page'],
-#             "rowLimit": 25000
-#             }
-#             response = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
-#             df=pd.DataFrame(response['rows'])
-#             # list=[]
-#             data=[]
-#             for row in response['rows']:
-#                 query=row['keys'][0]
-#                 country=row['keys'][1]
-#                 device=row['keys'][2]
-#                 page=row['keys'][3]
-#                 clicks=row['clicks']
-#                 ctr=row['ctr']
-#                 impressions=row['impressions']
-#                 position=row['position']
-#                 data.append({
-#                     'query':query,
-#                     'country':country,
-#                     'device':device,
-#                     'page':page,
-#                     'clicks':clicks,
-#                     'ctr':ctr,
-#                     'impressions':impressions,
-#                     'position':position
-#                 })
-#             # df = pd.DataFrame(data, columns=['page', 'clicks', 'impressions', 'ctr','position'])
-#             df=pd.DataFrame(data)
-#             df['ctr']=df['ctr'].round(2)
-#             df['position']=df['position'].round(2)
-#             df['impressions']=df['impressions'].round(2)
-#             final_row_data=[]
-#             for index ,rows in df.iterrows():
-#                 final_row_data.append(rows.to_dict())
-#             return final_row_data
+class TopqueriesAPI(viewsets.ModelViewSet):
+    serializer_class=ProfileDataSerializer
+    pagination_class = CustomPagination
+    def get_queryset(self):
+            start_date = self.request.query_params.get('start_date')
+            end_date = self.request.query_params.get('end_date')
+            if start_date and end_date:
+                pass
+            else:
+                start_date = "2022-03-01"
+                end_date = "2022-03-15"
+            country=self.request.query_params.get('country')
+            device=self.request.query_params.get('device')
+            page=self.request.query_params.get('page')
+            scopes = ['https://www.googleapis.com/auth/webmasters']
+            service = gsc_auth(scopes)
+            sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:hptourtravel.com').execute()
+            service = gsc_auth(scopes)
+            list=[]
+            print(service,'sssssssssss')
+            request = {
+                "startDate": start_date,
+                "endDate": end_date,
+                "dimensions": ['query', 'country', 'device', 'page'],
+            "rowLimit": 25000
+            }
+            response = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
+            df=pd.DataFrame(response['rows'])
+            # list=[]
+            data=[]
+            for row in response['rows']:
+                query=row['keys'][0]
+                country=row['keys'][1]
+                device=row['keys'][2]
+                page=row['keys'][3]
+                clicks=row['clicks']
+                ctr=row['ctr']
+                impressions=row['impressions']
+                position=row['position']
+                data.append({
+                    'query':query,
+                    'country':country,
+                    'device':device,
+                    'page':page,
+                    'clicks':clicks,
+                    'ctr':ctr,
+                    'impressions':impressions,
+                    'position':position
+                })
+            # df = pd.DataFrame(data, columns=['page', 'clicks', 'impressions', 'ctr','position'])
+            df=pd.DataFrame(data)
+            df['ctr']=df['ctr'].round(2)
+            df['position']=df['position'].round(2)
+            df['impressions']=df['impressions'].round(2)
+            final_row_data=[]
+            for index ,rows in df.iterrows():
+                final_row_data.append(rows.to_dict())
+            return final_row_data
        
 from rest_framework import status
 
@@ -1998,63 +1998,63 @@ def google_search_console_login_redirect(request):
 
 
 
-class TopqueriesAPI(viewsets.ModelViewSet):
-    serializer_class=ProfileDataSerializer
-    pagination_class = CustomPagination
-    def get_queryset(self):
-            start_date = self.request.query_params.get('start_date')
-            end_date = self.request.query_params.get('end_date')
-            if start_date and end_date:
-                pass
-            else:
-                start_date = "2022-03-01"
-                end_date = "2022-03-15"
-            country=self.request.query_params.get('country')
-            device=self.request.query_params.get('device')
-            page=self.request.query_params.get('page')
-            scopes = ['https://www.googleapis.com/auth/webmasters']
-            service = gcd_auth(scopes)
-            sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:hptourtravel.com').execute()
-            service = gcd_auth(scopes)
-            list=[]
-            print(service,'sssssssssss')
-            request = {
-                "startDate": start_date,
-                "endDate": end_date,
-                "dimensions": ['query', 'country', 'device', 'page'],
-            "rowLimit": 25000
-            }
-            response = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
-            df=pd.DataFrame(response['rows'])
-            # list=[]
-            data=[]
-            for row in response['rows']:
-                query=row['keys'][0]
-                country=row['keys'][1]
-                device=row['keys'][2]
-                page=row['keys'][3]
-                clicks=row['clicks']
-                ctr=row['ctr']
-                impressions=row['impressions']
-                position=row['position']
-                data.append({
-                    'query':query,
-                    'country':country,
-                    'device':device,
-                    'page':page,
-                    'clicks':clicks,
-                    'ctr':ctr,
-                    'impressions':impressions,
-                    'position':position
-                })
-            # df = pd.DataFrame(data, columns=['page', 'clicks', 'impressions', 'ctr','position'])
-            df=pd.DataFrame(data)
-            df['ctr']=df['ctr'].round(2)
-            df['position']=df['position'].round(2)
-            df['impressions']=df['impressions'].round(2)
-            final_row_data=[]
-            for index ,rows in df.iterrows():
-                final_row_data.append(rows.to_dict())
-            return final_row_data
+# class TopqueriesAPI(viewsets.ModelViewSet):
+#     serializer_class=ProfileDataSerializer
+#     pagination_class = CustomPagination
+#     def get_queryset(self):
+#             start_date = self.request.query_params.get('start_date')
+#             end_date = self.request.query_params.get('end_date')
+#             if start_date and end_date:
+#                 pass
+#             else:
+#                 start_date = "2022-03-01"
+#                 end_date = "2022-03-15"
+#             country=self.request.query_params.get('country')
+#             device=self.request.query_params.get('device')
+#             page=self.request.query_params.get('page')
+#             scopes = ['https://www.googleapis.com/auth/webmasters']
+#             service = gcd_auth(scopes)
+#             sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:hptourtravel.com').execute()
+#             service = gcd_auth(scopes)
+#             list=[]
+#             print(service,'sssssssssss')
+#             request = {
+#                 "startDate": start_date,
+#                 "endDate": end_date,
+#                 "dimensions": ['query', 'country', 'device', 'page'],
+#             "rowLimit": 25000
+#             }
+#             response = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
+#             df=pd.DataFrame(response['rows'])
+#             # list=[]
+#             data=[]
+#             for row in response['rows']:
+#                 query=row['keys'][0]
+#                 country=row['keys'][1]
+#                 device=row['keys'][2]
+#                 page=row['keys'][3]
+#                 clicks=row['clicks']
+#                 ctr=row['ctr']
+#                 impressions=row['impressions']
+#                 position=row['position']
+#                 data.append({
+#                     'query':query,
+#                     'country':country,
+#                     'device':device,
+#                     'page':page,
+#                     'clicks':clicks,
+#                     'ctr':ctr,
+#                     'impressions':impressions,
+#                     'position':position
+#                 })
+#             # df = pd.DataFrame(data, columns=['page', 'clicks', 'impressions', 'ctr','position'])
+#             df=pd.DataFrame(data)
+#             df['ctr']=df['ctr'].round(2)
+#             df['position']=df['position'].round(2)
+#             df['impressions']=df['impressions'].round(2)
+#             final_row_data=[]
+#             for index ,rows in df.iterrows():
+#                 final_row_data.append(rows.to_dict())
+#             return final_row_data
        
 

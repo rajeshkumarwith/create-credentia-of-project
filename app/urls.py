@@ -9,7 +9,7 @@ from .console import *
 from rest_framework import routers
 
 router=routers.DefaultRouter()
-# router.register('kewords',views.TopqueriesAPI, basename='profile')
+router.register('kewords',views.TopqueriesAPI, basename='profile')
 router.register('pages',views.TopPageAPI,basename='page')
 router.register('save',views.SearchAPIView, basename='save')
 
@@ -21,7 +21,7 @@ urlpatterns=[
     path('api/token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
     # path('data/',views.searchdata,name='search'),
     path('page/',views.PageAPI,name='sitemap'),
-    path('show',searchdataapiview,name='show'),
+    # path('show',searchdataapiview,name='show'),
     path('searchdata',views.searchdataapi,name='searchdata'),
     path('chart/',showchartapi,name='graph'),
     # path('plot/',views.plot_png,name='plot'),
