@@ -56,7 +56,7 @@ from googleapiclient.discovery import build
 from django.http import JsonResponse
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
-data = GoogleSearchConsoleTokenData.objects.first()
+data = GoogleSearchConsoleTokenData.objects.last()
    
 creds = Credentials.from_authorized_user_info(info={
         # "client_id": "286943146870-3n2anft2m2ths4lkdfk5a0qh1mld70sf.apps.googleusercontent.com",
@@ -82,11 +82,13 @@ class GetCountryAPI(APIView):
             # specify the project URL to get data for
 
             # query the API for the specified URL's project data
+            days_ago=7
+            start_date = (datetime.today() - timedelta(days=days_ago)).strftime('%Y-%m-%d')
             response = service.searchanalytics().query(
                 siteUrl='sc-domain:hptourtravel.com',
                 body={
-                    'startDate': '2023-01-01',
-                    'endDate': '2023-05-10',
+                    'startDate': start_date,
+                    'endDate': start_date,
                     'dimensions': ['query']
                 }
             ).execute()
@@ -295,7 +297,8 @@ class TokenDataApi(APIView):
         print('client_secret',creds.client_secret)
         print('scopes',creds.scopes)
         print('expiry',creds.expiry)
-        return Response({'AccessToken':creds.token,'RefreshToken':creds.refresh_token})
+        # return Response({'AccessToken':creds.token,'RefreshToken':creds.refresh_token})
+        return Response(status=status.HTTP_200_OK)
         # return Response(service)
 
 from google.oauth2.credentials import Credentials
@@ -424,9 +427,11 @@ import json
 @api_view(['GET'])
 def GetDeviceAPI(request):
     scopes = ['https://www.googleapis.com/auth/webmasters']
-    service = gsc_auth(scopes)
-    sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:hptourtravel.com').execute()
-    service = gsc_auth(scopes)
+    # service = gsc_auth(scopes)
+    # sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:hptourtravel.com').execute()
+    # service = gsc_auth(scopes)
+    service = build('searchconsole', 'v1', credentials=creds)
+
     list=[]
     print(service,'sssssssssss')
     request = {
@@ -465,9 +470,10 @@ def GetDeviceAPI(request):
 @api_view(['GET'])
 def PageAPI(request):
     scopes = ['https://www.googleapis.com/auth/webmasters']
-    service = gsc_auth(scopes)
+    # service = gsc_auth(scopes)
+    service = build('searchconsole', 'v1', credentials=creds)
     sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:hptourtravel.com').execute()
-    service = gsc_auth(scopes)
+    # service = gsc_auth(scopes)
     list=[]
     print(service,'sssssssssss')
     request = {
@@ -517,9 +523,10 @@ class DateAPI(APIView):
             print(start_date, "fdgfdgdfgfdg")
             print(end_date, "sdfgdend_dategffdg  end_date")
             scopes = ['https://www.googleapis.com/auth/webmasters']
-            service = gsc_auth(scopes)
+            # service = gsc_auth(scopes)
+            service = build('searchconsole', 'v1', credentials=creds)
             sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:hptourtravel.com').execute()
-            service = gsc_auth(scopes)
+            # service = gsc_auth(scopes)
             list=[]
             print(service,'sssssssssss')
             request = {
@@ -556,9 +563,10 @@ class DateAPI(APIView):
             return Response(final_row_data)
         except:
             scopes = ['https://www.googleapis.com/auth/webmasters']
-            service = gsc_auth(scopes)
+            service = build('searchconsole', 'v1', credentials=creds)
+            # service = gsc_auth(scopes)
             sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:hptourtravel.com').execute()
-            service = gsc_auth(scopes)
+            # service = gsc_auth(scopes)
             list=[]
             print(service,'sssssssssss')
             request = {
@@ -609,9 +617,10 @@ class DateFilter(APIView):
             device=request.data.get('device')
             page=request.data.get('page')
             scopes = ['https://www.googleapis.com/auth/webmasters']
-            service = gsc_auth(scopes)
+            # service = gsc_auth(scopes)
+            service = build('searchconsole', 'v1', credentials=creds)
             sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:hptourtravel.com').execute()
-            service = gsc_auth(scopes)
+            # service = gsc_auth(scopes)
             list=[]
             print(service,'sssssssssss')
             request = {
@@ -709,6 +718,7 @@ def search_console_data(request):
         ],
         'fields': ['rows(clicks,ctr,impressions,position)']
     }
+    service = build('searchconsole', 'v1', credentials=creds)
     response =service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
 
     # extract relevant data from API response
@@ -744,9 +754,10 @@ def search_console_data(request):
 @api_view(['GET'])
 def PageAPI(request):
     scopes = ['https://www.googleapis.com/auth/webmasters']
-    service = gsc_auth(scopes)
+    # service = gsc_auth(scopes)
+    service = build('searchconsole', 'v1', credentials=creds)
     sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:hptourtravel.com').execute()
-    service = gsc_auth(scopes)
+    # service = gsc_auth(scopes)
     list=[]
     print(service,'sssssssssss')
     request = {
@@ -884,7 +895,8 @@ import pandas as pd
 import math
 def searchdataapiview(request):
     scopes = ['https://www.googleapis.com/auth/webmasters']
-    service = gsc_auth(scopes)
+    # service = gsc_auth(scopes)
+    service = build('searchconsole', 'v1', credentials=creds)
     requestdata = {
         "startDate": "2022-03-01",
         "endDate": "2022-03-15",
@@ -1085,9 +1097,10 @@ class TopqueriesAPI(viewsets.ModelViewSet):
             device=self.request.query_params.get('device')
             page=self.request.query_params.get('page')
             scopes = ['https://www.googleapis.com/auth/webmasters']
-            service = gsc_auth(scopes)
+            # service = gsc_auth(scopes)
+            service = build('searchconsole', 'v1', credentials=creds)
             sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:hptourtravel.com').execute()
-            service = gsc_auth(scopes)
+            # service = gsc_auth(scopes)
             list=[]
             print(service,'sssssssssss')
             request = {
@@ -1227,25 +1240,27 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from django.conf import settings
 
-#   project=request.data.get('project')
-#         # Build the Search Console API client using the credentials
-#         search_console = build('webmasters', 'v3', credentials=credentials)
 
-#         try:
-#             # Make the API request to verify the domain in Search Console
-#             response = search_console.sites().add(siteUrl='https://' + project + '/').execute()
-#             return Response(status=status.HTTP_200_OK)
+import hashlib
+from django.http import HttpResponse
+
 class DomainVerify(APIView):
     def post(self, request):
         project = request.data.get('project')
         # creds = Credentials.from_authorized_user_file(f'{settings.BASE_DIR}/TOKEN_FILE', ['https://www.googleapis.com/auth/webmasters'])
         creds = Credentials.from_service_account_file(f'{settings.BASE_DIR}/credentials.json', scopes=['https://www.googleapis.com/auth/webmasters'])
-        search_console = build('webmasters', 'v3', credentials=creds)
+        service = build('webmasters', 'v3', credentials=creds)
         try:
-            response = search_console.sites().add(siteUrl='https://' + project + '/').execute()
+            # response = service.sites().add(siteUrl='https://' + project + '/').execute()
+            # return Response(status=status.HTTP_200_OK)
 
+            site_url = "sc-domain:"+str(project) 
+            response = service.sites().add(siteUrl='https://' + project + '/').execute()
+            verification_code = hashlib.sha256(response.encode("utf-8")).hexdigest()
+            print(verification_code)
+            verification_file_content = f"google-site-verification: google{verification_code}.html"
             return Response(status=status.HTTP_200_OK)
-
+           
         except HttpError as error:
             # Handle HttpError exceptions
             return Response({'error': error.resp.status}, status=error.resp.status)
@@ -1253,21 +1268,57 @@ class DomainVerify(APIView):
         except KeyError:
             # Handle KeyError exceptions
             return Response({'error': 'siteVerificationMethod key not found'}, status=400)
+    
 
+import os
+from google.oauth2 import service_account
+from googleapiclient.errors import HttpError
+from googleapiclient.discovery import build
+from django.http import HttpResponse
 
+def google_search_console_api_verification(request):
+    SCOPES = ["https://www.googleapis.com/auth/webmasters"]
+    SERVICE_ACCOUNT_FILE = os.path.join(os.path.dirname(__file__), f'{settings.BASE_DIR}/credentials.json')
 
+    try:
+        credentials = service_account.Credentials.from_service_account_file(
+            SERVICE_ACCOUNT_FILE, scopes=SCOPES
+        )
+        webmasters_service = build("webmasters", "v3", credentials=credentials)
 
+        site_url = "https://www..com" # Replace with your website URL
+        site_verification = {
+            "site": site_url,
+            "verificationMethod": "HTML_FILE_UPLOAD",
+            "verificationDetails": {
+                "filename": "googleXXXXXXXXXXXXXXXX.html",
+                "content": "insert verification file content here"
+            }
+        }
+        result = webmasters_service.sites().addVerification(siteUrl=site_url, body=site_verification).execute()
+
+        return HttpResponse("Site verification successful.")
+    except HttpError as error:
+        return HttpResponse(f"An error occurred: {error}")
+
+from datetime import datetime,timedelta
+days_ago=7
+start_date = (datetime.today() + timedelta(days=days_ago)).strftime('%Y-%m-%d')
+print(start_date,'ssssssssss')
 class TopPageAPI(viewsets.ModelViewSet):
     serializer_class=PageDataSerializer
     pagination_class = CustomPagination
     def get_queryset(self):
-            start_date = self.request.query_params.get('start_date')
-            end_date = self.request.query_params.get('end_date')
-            if start_date and end_date:
-                pass
-            else:
-                start_date = "2022-03-01"
-                end_date = "2022-03-15"
+            # start_date = self.request.query_params.get('start_date')
+            # end_date = self.request.query_params.get('end_date')
+            # if start_date and end_date:
+            #     pass
+            # else:
+            #     start_date = "2022-03-01"
+            #     end_date = "2022-03-15"
+            # days_ago=7
+            # start_date = (datetime.today() + timedelta(days=days_ago)).strftime('%Y-%m-%d')
+           
             country=self.request.query_params.get('country')
             device=self.request.query_params.get('device')
             page=self.request.query_params.get('page')
@@ -1281,7 +1332,7 @@ class TopPageAPI(viewsets.ModelViewSet):
             print(service,'sssssssssss')
             request = {
                 "startDate": start_date,
-                "endDate": end_date,
+                "endDate": start_date,
                 "dimensions": ['query', 'country', 'device', 'page'],
             "rowLimit": 25000
             }
@@ -1346,9 +1397,10 @@ class QueryAPI(generics.ListCreateAPIView):
             page=self.request.query_params.get('page')
             project=self.request.query_params.get('project')
             scopes = ['https://www.googleapis.com/auth/webmasters']
-            service = gsc_auth(scopes)
+            # service = gsc_auth(scopes)
+            service = build('searchconsole', 'v1', credentials=creds)
             sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:' + str(project)).execute()
-            service = gsc_auth(scopes)
+            # service = gsc_auth(scopes)
             list=[]
             print(service,'sssssssssss')
             request = {
@@ -1434,9 +1486,10 @@ class SearchDataApi(generics.ListCreateAPIView):
             # if not query:
             #     return Response(status=status.HTTP_400_BAD_REQUEST)
             scopes = ['https://www.googleapis.com/auth/webmasters']
-            service = gsc_auth(scopes)
+            # service = gsc_auth(scopes)
+            service = build('searchconsole', 'v1', credentials=creds)
             sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:' + str(project)).execute()
-            service = gsc_auth(scopes)
+            # service = gsc_auth(scopes)
             list=[]
             print(service,'sssssssssss')
             request = {
@@ -1488,9 +1541,10 @@ class QueryFilter(APIView):
             # device=request.data.get('device')
             # page=request.data.get('page')
             scopes = ['https://www.googleapis.com/auth/webmasters']
-            service = gsc_auth(scopes)
+            service = build('searchconsole', 'v1', credentials=creds)
+            # service = gsc_auth(scopes)
             sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:hptourtravel.com').execute()
-            service = gsc_auth(scopes)
+            # service = gsc_auth(scopes)
             list=[]
             print(service,'sssssssssss')
             request = {
@@ -1551,7 +1605,8 @@ from googleapiclient.discovery import build
 class SearchConsoleAPIView(APIView):
     def get(self, request, *args, **kwargs):
         scopes = ['https://www.googleapis.com/auth/webmasters']
-        service = gcd_auth(scopes)
+        service = build('searchconsole', 'v1', credentials=creds)
+        # service = gcd_auth(scopes)
         project=self.request.query_params.get('project')
         sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:' +str(project)).execute()
         service = gsc_auth(scopes)
@@ -1596,26 +1651,79 @@ class QueryFilterApi(APIView):
 from django.db.models import Q
 from rest_framework.generics import ListAPIView
 
-class SearchListdataView(ListAPIView):
-    serializer_class = SearchSerailizer
-    def get_queryset(self):
-        query_params = self.request.query_params.get('keyword', None)
-        if query_params is not None:
-            values = query_params.split(',')
-            print(values,'vvvvvvvvvvvv')
-            queries = [Q(keyword=value) for value in values]
-            print(queries,'qqqqqqqqqqqq')
-            query = queries.pop()
-            print(query,'eeeeeeeeeee')
-            for q in queries:
-                query |= q
-            # stuff=SearchConsoleData.objects.all()[:10]
-            queryset = SearchConsoleData.objects.filter(query)
+# class SearchListdataView(ListAPIView):
+#     serializer_class = SearchSerailizer
+#     def get_queryset(self):
+#         query_params = self.request.query_params.get('keyword', None)
+#         if query_params is not None:
+#             values = query_params.split(',')
+#             print(values,'vvvvvvvvvvvv')
+#             queries = [Q(keyword=value) for value in values]
+#             print(queries,'qqqqqqqqqqqq')
+#             query = queries.pop()
+#             print(query,'eeeeeeeeeee')
+#             for q in queries:
+#                 query |= q
+#             # stuff=SearchConsoleData.objects.all()[:10]
+#             queryset = SearchConsoleData.objects.filter(query)
            
-            print(queryset,'qquuuuuuuuuuuuu')
-        else:
-            queryset = SearchConsoleData.objects.all()
-        return queryset
+#             print(queryset,'qquuuuuuuuuuuuu')
+#         else:
+#             queryset = SearchConsoleData.objects.all()
+#         return queryset
+days_ago=7
+start_date = (datetime.today() + timedelta(days=days_ago)).strftime('%Y-%m-%d')
+print(start_date,'nnnnnnnnnnnnnnnnnn')
+class SearchListdataView(ListAPIView):
+    def get(self,request,*args,**kwargs):
+      try:
+            scopes = ['https://www.googleapis.com/auth/webmasters']
+            # service = gsc_auth(scopes)
+            # sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:hptourtravel.com').execute()
+            # service = gsc_auth(scopes)
+            service = build('searchconsole', 'v1', credentials=creds)
+            # days_ago=7
+            # start_date = (datetime.today() - timedelta(days=days_ago)).strftime('%Y-%m-%d')
+            project=request.data['project']
+            print(start_date,'sssssssssssdddddddddddddd')
+            list=[]
+            print(service,'sssssssssss')
+            request = {
+                "startDate": start_date,
+                "endDate": start_date,
+                "dimensions": [
+                "QUERY",
+            ],
+            "rowLimit": 25000
+            }
+            gsc_search_analytics = service.searchanalytics().query(siteUrl='sc-domain:'+str(project), body=request).execute()
+            # df = pd.DataFrame(gsc_search_analytics['rows'])
+            response = service.searchanalytics().query(siteUrl='sc-domain:' +str(project), body=request).execute()
+
+            output_rows=[]
+            for row in response['rows']:
+                    keyword=row['keys'][0]
+                    # page = row['keys'][1]
+                    # device = row['keys'][1][0]
+                    # device = row['keys']
+                    output_row = [ keyword]
+                    output_rows.append(output_row)
+            df = pd.DataFrame(output_rows, columns=['keyword'])
+            # df['device'] = df['device'].apply(lambda x: df[x] if x in df['device'] else x)
+            # df['device']=df['device'].str.capitalize()
+            # df['ctr']=df['ctr'].round(2)
+            # df['position']=df['position'].round(2)
+            # df['impressions']=df['impressions'].round(2)
+            df['keyword']=df['keyword']
+            final_row_data=[]
+            for index ,rows in df.iterrows():
+                final_row_data.append(rows.to_dict())
+            # return Response(output_rows)
+            return Response(final_row_data)
+      except KeyError:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+          
+
 
 # class SearchListdataView(ListAPIView):
 #     serializer_class=SearchConsoleDataSerializer
@@ -1798,7 +1906,8 @@ class SearchConsoleDataView(APIView):
     def post(self, request, format=None):
         project=request.data['project']
         scopes = ['https://www.googleapis.com/auth/webmasters']
-        service = gsc_auth(scopes)
+        # service = gsc_auth(scopes)
+        service = build('searchconsole', 'v1', credentials=creds)
         # Call the Google Search Console API to retrieve data
         try:
             response = service.searchanalytics().query(
@@ -2151,7 +2260,8 @@ class SearchAPIView(APIView):
 
         try:
             scopes = ['https://www.googleapis.com/auth/webmasters']
-            searchconsole =gsc_auth(scopes)
+            # searchconsole =gsc_auth(scopes)
+            searchconsole = build('searchconsole', 'v1', credentials=creds)
 
             end_date = datetime.now().date() - timedelta(days=1)
             print(end_date,'eeeeeeee')

@@ -108,10 +108,6 @@ class SearchResult(models.Model):
         return self.project
     
 
-
-
-
-
 class SearchConsoleData(models.Model):
     project = models.CharField(max_length=255,blank=True,null=True)
     keyword = models.CharField(max_length=255)
