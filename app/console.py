@@ -47,6 +47,36 @@ from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 import json
 
+
+from google.oauth2.credentials import Credentials
+from google.auth.transport.requests import Request
+from google.oauth2 import service_account
+from django.conf import settings
+from rest_framework.views import APIView
+from rest_framework.response import Response
+
+
+import os.path
+from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from oauth2client.client import SignedJwtAssertionCredentials
+from httplib2 import Http
+
+from rest_framework.generics import GenericAPIView
+from .serializers import*
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.permissions import AllowAny
+from rest_framework.decorators import permission_classes
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
+from django.conf import settings
 # Create your views here.
 
 
@@ -190,7 +220,8 @@ def gsc_auth(scopes):
             creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
-                f'{settings.BASE_DIR}/client.json', scopes)
+                f'{settings.BASE_DIR}/client.json', scopes,
+                    redirect_uri='http://localhost:8000/search-console/callback')
             creds = flow.run_local_server(port=0)
         with open(f'{settings.BASE_DIR}/token.json', 'w') as token:
             token.write(creds.to_json())
@@ -269,22 +300,37 @@ def gsc_auth(scopes):
 
 
 
+# PORT='https://app.doddlehq.com/manual'
+from google_auth_oauthlib.helpers import credentials_from_session
+from google.auth import credentials
+from google.auth.transport.requests import AuthorizedSession
 
 class TokenDataApi(APIView):
     def get(self,request,*args,**kwargs):
         scopes = ['https://www.googleapis.com/auth/webmasters.readonly']
 
+        # flow = InstalledAppFlow.from_client_secrets_file(
+        #      f'{settings.BASE_DIR}/client.json', scopes=scopes,
+        #         redirect_uri='http://localhost:8000/search-console/callback')
         flow = InstalledAppFlow.from_client_secrets_file(
-             f'{settings.BASE_DIR}/client.json', scopes=scopes)
-
+                f'{settings.BASE_DIR}/client.json',
+                scopes=['https://www.googleapis.com/auth/webmasters'],
+                redirect_uri='http://localhost:8080/search-console/callback'
+            )
+        print(flow,'ffffffffffff')
         creds = None
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
             else:
                 flow.run_local_server(port=0)
-                creds = flow.credentials
-        GoogleSearchConsoleTokenData.objects.create(token=creds.token,refresh_token=creds.refresh_token,token_uri=creds.token_uri,client_id=creds.client_id,client_secret=creds.client_secret,
+                creds =flow.credentials
+        # if settings.DEBUG:
+        #     creds = flow.run_local_server(port=8002)
+        # else:
+        #     creds = flow.run_console()
+        print(creds,'ccccccccccccc')
+        GoogleSearchConsoleTokenData.objects.update_or_create(token=creds.token,refresh_token=creds.refresh_token,token_uri=creds.token_uri,client_id=creds.client_id,client_secret=creds.client_secret,
                                                     scopes=creds.scopes,expiry=creds.expiry)
 
         service=build('searchconsole', 'v1',credentials=creds)
@@ -831,13 +877,6 @@ def CSVReaderToJson(request):
 # from rest_framework.permissions import IsAuthenticated
 # from rest_framework import viewsets
 
-import os.path
-from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from oauth2client.client import SignedJwtAssertionCredentials
-from httplib2 import Http
 
 
 
@@ -1231,15 +1270,6 @@ from rest_framework import status
 
 #         return JsonResponse({'verified': verified, 'verification_method': verification_method})
 
-# views.py
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from google.oauth2.credentials import Credentials
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
-from django.conf import settings
-
 
 import hashlib
 from django.http import HttpResponse
@@ -1262,13 +1292,11 @@ class DomainVerify(APIView):
             return Response(status=status.HTTP_200_OK)
            
         except HttpError as error:
-            # Handle HttpError exceptions
             return Response({'error': error.resp.status}, status=error.resp.status)
 
         except KeyError:
-            # Handle KeyError exceptions
             return Response({'error': 'siteVerificationMethod key not found'}, status=400)
-    
+
 
 import os
 from google.oauth2 import service_account
@@ -1281,12 +1309,13 @@ def google_search_console_api_verification(request):
     SERVICE_ACCOUNT_FILE = os.path.join(os.path.dirname(__file__), f'{settings.BASE_DIR}/credentials.json')
 
     try:
+        project=request.data.get('project')
         credentials = service_account.Credentials.from_service_account_file(
             SERVICE_ACCOUNT_FILE, scopes=SCOPES
         )
         webmasters_service = build("webmasters", "v3", credentials=credentials)
 
-        site_url = "https://www..com" # Replace with your website URL
+        site_url = "sc-domain:"+str(project) # Replace with your website URL
         site_verification = {
             "site": site_url,
             "verificationMethod": "HTML_FILE_UPLOAD",
@@ -1300,11 +1329,12 @@ def google_search_console_api_verification(request):
         return HttpResponse("Site verification successful.")
     except HttpError as error:
         return HttpResponse(f"An error occurred: {error}")
+    
 
 from datetime import datetime,timedelta
 days_ago=7
 start_date = (datetime.today() + timedelta(days=days_ago)).strftime('%Y-%m-%d')
-print(start_date,'ssssssssss')
+
 class TopPageAPI(viewsets.ModelViewSet):
     serializer_class=PageDataSerializer
     pagination_class = CustomPagination
@@ -1769,14 +1799,6 @@ class Googleauthcallback(generics.GenericAPIView):
 
 
 
-from rest_framework.generics import GenericAPIView
-from .serializers import*
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.permissions import AllowAny
-from rest_framework.decorators import permission_classes
-
-
 @permission_classes((AllowAny, ))
 class GoogleSocialAuthView(GenericAPIView):
     serializer_class = GoogleSocialAuthSerializer
@@ -2021,13 +2043,6 @@ class ManualSearchAPIVIew(APIView):
 #         data=SearchConsoleData.objects.filter(kewyowrd=keyword).values()
 #         return Response(data)
 
-
-from google.oauth2.credentials import Credentials
-from google.auth.transport.requests import Request
-from google.oauth2 import service_account
-from django.conf import settings
-from rest_framework.views import APIView
-from rest_framework.response import Response
 
 # Set the path to your private key JSON file
 KEY_FILE_LOCATION = 'path/to/your/private/key.json'

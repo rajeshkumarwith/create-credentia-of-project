@@ -149,6 +149,8 @@ CORS_ORIGIN_WHITELIST = [
     
 
 ]
+PORT='https://app.doddlehq.com/manual'
+
 
 ROOT_URLCONF = 'project.urls'
 TEMPLATES = [
