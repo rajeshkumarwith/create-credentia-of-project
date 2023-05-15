@@ -315,7 +315,7 @@ class TokenDataApi(APIView):
         #      f'{settings.BASE_DIR}/client.json', scopes=scopes)
         flow = InstalledAppFlow.from_client_secrets_file(
                 f'{settings.BASE_DIR}/client.json',
-                scopes=['https://www.googleapis.com/auth/webmasters'],
+                scopes= ['https://www.googleapis.com/auth/webmasters.readonly'],
                 redirect_uri='https://app.doddlehq.com',
             )
         # flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(f'{settings.BASE_DIR}/client.json', scopes=scopes)
@@ -325,7 +325,7 @@ class TokenDataApi(APIView):
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
             else:
-                creds=flow.run_local_server( port=443)
+                creds=flow.run_local_server( port=0)
                 # flow.fetch_token()
                 creds = flow.credentials
     
@@ -349,6 +349,39 @@ class TokenDataApi(APIView):
         # return Response(service)
 
 from google.oauth2.credentials import Credentials
+
+
+
+
+
+from django.http import JsonResponse
+
+@csrf_exempt
+def oauth2callback(request):
+    # state = request.session['state']
+    flow = Flow.from_client_secrets_file(
+        f'{settings.BASE_DIR}/client.json',
+        scopes=['https://www.googleapis.com/auth/drive.metadata.readonly'],
+    )
+    flow.redirect_uri ='http://localhost:8000/search-console/callback'
+
+    authorization_response = request.build_absolute_uri()
+    flow.fetch_token(authorization_response=authorization_response)
+
+    credentials = flow.credentials
+    request.session['credentials'] = {
+        'token': credentials.token,
+        'refresh_token': credentials.refresh_token,
+        'token_uri': credentials.token_uri,
+        'client_id': credentials.client_id,
+        'client_secret': credentials.client_secret,
+        'scopes': credentials.scopes,
+    }
+
+    return JsonResponse({'message': 'Authentication successful'})
+
+
+
 
 # class GetCountryAPI(APIView):
 #     # permission_classes = (AllowAny,)
