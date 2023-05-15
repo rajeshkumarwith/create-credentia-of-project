@@ -1,6 +1,7 @@
 from rest_framework.authtoken.models import Token
 
 from django.contrib.auth.models import User
+from doddle.models import *
 from django.conf import settings
 from rest_framework.exceptions import AuthenticationFailed
 
@@ -44,6 +45,6 @@ def register_social_user(provider, user_id, email, name):
         new_token = list(Token.objects.filter(user_id=new_user).values("key"))
         return {
             'email': new_user.email,
-            'username': new_user.username,
+            
             # 'tokens': str(new_token[0]['key']),
         }

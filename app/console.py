@@ -304,32 +304,33 @@ def gsc_auth(scopes):
 from google_auth_oauthlib.helpers import credentials_from_session
 from google.auth import credentials
 from google.auth.transport.requests import AuthorizedSession
+import google_auth_oauthlib.flow
+import random
 
 class TokenDataApi(APIView):
     def get(self,request,*args,**kwargs):
         scopes = ['https://www.googleapis.com/auth/webmasters.readonly']
 
         # flow = InstalledAppFlow.from_client_secrets_file(
-        #      f'{settings.BASE_DIR}/client.json', scopes=scopes,
-        #         redirect_uri='http://localhost:8000/search-console/callback')
+        #      f'{settings.BASE_DIR}/client.json', scopes=scopes)
         flow = InstalledAppFlow.from_client_secrets_file(
                 f'{settings.BASE_DIR}/client.json',
                 scopes=['https://www.googleapis.com/auth/webmasters'],
-                redirect_uri='http://localhost:8080/search-console/callback'
+                redirect_uri='https://app.doddlehq.com',
             )
+        # flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(f'{settings.BASE_DIR}/client.json', scopes=scopes)
         print(flow,'ffffffffffff')
-        creds = None
+        creds=None
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
             else:
-                flow.run_local_server(port=0)
-                creds =flow.credentials
-        # if settings.DEBUG:
-        #     creds = flow.run_local_server(port=8002)
-        # else:
-        #     creds = flow.run_console()
-        print(creds,'ccccccccccccc')
+                creds=flow.run_local_server( port=0)
+                # flow.fetch_token()
+                creds = flow.credentials
+    
+      
+      
         GoogleSearchConsoleTokenData.objects.update_or_create(token=creds.token,refresh_token=creds.refresh_token,token_uri=creds.token_uri,client_id=creds.client_id,client_secret=creds.client_secret,
                                                     scopes=creds.scopes,expiry=creds.expiry)
 
@@ -1702,7 +1703,7 @@ from rest_framework.generics import ListAPIView
 #             queryset = SearchConsoleData.objects.all()
 #         return queryset
 days_ago=7
-start_date = (datetime.today() + timedelta(days=days_ago)).strftime('%Y-%m-%d')
+start_date = (datetime.today() - timedelta(days=days_ago)).strftime('%Y-%m-%d')
 print(start_date,'nnnnnnnnnnnnnnnnnn')
 class SearchListdataView(ListAPIView):
     def get(self,request,*args,**kwargs):
@@ -1772,29 +1773,29 @@ class KeywordListAPIView(APIView):
         return Response(search)
 
 
-from allauth.socialaccount.models import SocialAccount
-from django.shortcuts import redirect
+# from allauth.socialaccount.models import SocialAccount
+# from django.shortcuts import redirect
 
-def google_auth_callback(request):
-    social_account = SocialAccount.objects.filter(provider='google', user=request.user).first()
-    if social_account:
-        user = social_account.user
-        print(user,'uuuuuuuuu')
-        user.email = social_account.extra_data['email']
-        print(user.email,'eeeeeeeeeeeeee')
-        user.save()
+# def google_auth_callback(request):
+#     social_account = SocialAccount.objects.filter(provider='google', user=request.user).first()
+#     if social_account:
+#         user = social_account.user
+#         print(user,'uuuuuuuuu')
+#         user.email = social_account.extra_data['email']
+#         print(user.email,'eeeeeeeeeeeeee')
+#         user.save()
 
-    return 'data'
+#     return 'data'
 
-class Googleauthcallback(generics.GenericAPIView):
-    def get(self,request,*args,**kwargs):
-        social_account=SocialAccount.objects.filter(provider='google',user=request.user).first()
-        print(social_account,'ssssssssssssssss')
-        if social_account:
-            user=social_account.user
-            user.email=social_account.extra_data['email']
-            user.save()
-        return Response({'save successfully'})
+# class Googleauthcallback(generics.GenericAPIView):
+#     def get(self,request,*args,**kwargs):
+#         social_account=SocialAccount.objects.filter(provider='google',user=request.user).first()
+#         print(social_account,'ssssssssssssssss')
+#         if social_account:
+#             user=social_account.user
+#             user.email=social_account.extra_data['email']
+#             user.save()
+#         return Response({'save successfully'})
 
 
 
@@ -2119,14 +2120,15 @@ def authenticate(request):
             scopes=['https://www.googleapis.com/auth/webmasters'],
             redirect_uri='http://localhost:8000/search-console/callback'
         )
+    print(flow,'ffffffff')
     authorization_url, state = flow.authorization_url(
             access_type='offline',
             include_granted_scopes='true'
         )
+   
     # request.session['state'] = state
     return redirect(authorization_url)  
     
-
 
 @csrf_exempt
 def google_search_console_login(request):
@@ -2293,3 +2295,74 @@ class SearchAPIView(APIView):
             return Response(response, status=status.HTTP_200_OK)
         except HttpError as error:
             return Response({'error': error}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def google_search_console(request):
+    # Initialize the flow object
+    flow = InstalledAppFlow.from_client_secrets_file(f'{settings.BASE_DIR}/client.json', scopes=SCOPES)
+
+    # Use the run_local_server method from the google_auth_oauthlib.helpers module
+    flow.redirect_uri = 'http://localhost:8000/google-search-console/callback'
+    authorization_url, state = flow.authorization_url(
+        access_type='offline',
+        include_granted_scopes='true'
+    )
+    request.session['google_auth_state'] = state
+    return redirect(authorization_url)
+
+from google.oauth2 import id_token
+from google.auth.transport import requests
+
+@api_view(['GET',])
+def google_auth_callback(request):
+    # Handle the callback from Google OAuth and retrieve the access token
+    code = request.GET.get('code')
+    redirect_uri = 'http://localhost:8000/search-console/callback'
+    client_id = '286943146870-h21okc0jtogcva4mrmi28h4fpkcaagum.apps.googleusercontent.com'
+    client_secret = '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'
+    grant_type = 'authorization_code'
+
+    token_url = 'https://oauth2.googleapis.com/token'
+    payload = {
+        'code': code,
+        'redirect_uri': redirect_uri,
+        'client_id': client_id,
+        'client_secret': client_secret,
+        'grant_type': grant_type
+    }
+
+    session = requests.Session()
+    response = session.post(token_url, data=payload)
+    token_data = response.json()
+    access_token = token_data.get('access_token')
+
+    # Verify the access token and retrieve the user information
+    id_info = id_token.verify_oauth2_token(
+        access_token, Request(), '286943146870-h21okc0jtogcva4mrmi28h4fpkcaagum.apps.googleusercontent.com')
+
+    return id_info
+
+
+class GoogleVerifyData(APIView):
+    def get(self,request,*args,**kwargs):
+        try:
+            domain=request.data.get('domain')
+            credentials, project = google.auth.default()
+            credentials = service_account.Credentials.from_service_account_file(
+                f'{settings.BASE_DIR}/client.json',
+                scopes=['https://www.googleapis.com/auth/webmasters']
+            )
+
+            # Build the Search Console service
+            service = build('webmasters', 'v3', credentials=credentials)
+
+            # Send a request to verify the domain
+            request = service.sites().add(
+                siteUrl=domain,
+                verificationMethod='DNS_HTML_FILE'
+            ).execute()
+            return Response(status=status.HTTP_200_OK)
+        
+
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST)

@@ -17,20 +17,19 @@ from django.contrib import admin
 from django.conf.urls import url
 
 from django.urls import path,include
-from allauth.account.views import ConfirmEmailView
+# from allauth.account.views import ConfirmEmailView
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/',include('app.urls')),
     path('api/',include('doddle.urls')),
-    path('accounts/', include('allauth.urls')),
+    # path('accounts/', include('allauth.urls')),
     # path('rest-auth/', include('dj_rest_auth.urls')),
     # path('rest-auth/registration/', include('dj_rest_auth.registration.urls')),
     path('api-auth/', include('drf_social_oauth2.urls',namespace='drf')),
 
  
-
 
 ]
 

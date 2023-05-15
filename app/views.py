@@ -1634,29 +1634,29 @@ class KeywordListAPIView(APIView):
         return Response(search)
 
 
-from allauth.socialaccount.models import SocialAccount
+# from allauth.socialaccount.models import SocialAccount
 from django.shortcuts import redirect
 
-def google_auth_callback(request):
-    social_account = SocialAccount.objects.filter(provider='google', user=request.user).first()
-    if social_account:
-        user = social_account.user
-        print(user,'uuuuuuuuu')
-        user.email = social_account.extra_data['email']
-        print(user.email,'eeeeeeeeeeeeee')
-        user.save()
+# def google_auth_callback(request):
+#     social_account = SocialAccount.objects.filter(provider='google', user=request.user).first()
+#     if social_account:
+#         user = social_account.user
+#         print(user,'uuuuuuuuu')
+#         user.email = social_account.extra_data['email']
+#         print(user.email,'eeeeeeeeeeeeee')
+#         user.save()
 
-    return 'data'
+#     return 'data'
 
-class Googleauthcallback(generics.GenericAPIView):
-    def get(self,request,*args,**kwargs):
-        social_account=SocialAccount.objects.filter(provider='google',user=request.user).first()
-        print(social_account,'ssssssssssssssss')
-        if social_account:
-            user=social_account.user
-            user.email=social_account.extra_data['email']
-            user.save()
-        return Response({'save successfully'})
+# class Googleauthcallback(generics.GenericAPIView):
+#     def get(self,request,*args,**kwargs):
+#         social_account=SocialAccount.objects.filter(provider='google',user=request.user).first()
+#         print(social_account,'ssssssssssssssss')
+#         if social_account:
+#             user=social_account.user
+#             user.email=social_account.extra_data['email']
+#             user.save()
+#         return Response({'save successfully'})
 
 
 
@@ -1969,25 +1969,25 @@ def authenticate(request):
     
 
 
-@csrf_exempt
-def google_search_console_login(request):
-    # create a Flow object for the Google OAuth2 authorization flow
-    flow = InstalledAppFlow.from_client_secrets_file(
-      f'{settings.BASE_DIR}/client.json',
-        scopes=['https://www.googleapis.com/auth/webmasters.readonly'],
-        redirect_uri='https://app.doddlehq.com/google-auth',
-        state=request.session.session_key,
+# @csrf_exempt
+# def google_search_console_login(request):
+#     # create a Flow object for the Google OAuth2 authorization flow
+#     flow = InstalledAppFlow.from_client_secrets_file(
+#       f'{settings.BASE_DIR}/client.json',
+#         scopes=['https://www.googleapis.com/auth/webmasters.readonly'],
+#         redirect_uri='https://app.doddlehq.com/google-auth',
+#         state=request.session.session_key,
        
-    )
+#     )
 
-    # start the authorization flow
-    authorization_url, state = flow.authorization_url(prompt='consent')
+#     # start the authorization flow
+#     authorization_url, state = flow.authorization_url(prompt='consent')
 
-    # store the state token in the user's session
-    request.session['google_state'] = state
+#     # store the state token in the user's session
+#     request.session['google_state'] = state
 
-    # redirect the user to the Google OAuth2 authorization page
-    return redirect(authorization_url)
+#     # redirect the user to the Google OAuth2 authorization page
+#     return redirect(authorization_url)
 
 
 @csrf_exempt

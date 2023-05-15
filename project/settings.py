@@ -40,16 +40,16 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'rest_framework_swagger',
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    'allauth.socialaccount.providers.google',
+    # 'allauth',
+    # 'allauth.account',
+    # 'allauth.socialaccount',
+    # 'allauth.socialaccount.providers.google',
     'django_filters',
     'oauth2_provider',
     # 'social_django',
     'drf_social_oauth2',
     'rest_framework.authtoken',
-    'rest_auth',
+    # 'rest_auth',
     'doddle',
 
 ]
@@ -57,7 +57,9 @@ INSTALLED_APPS = [
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
-    'allauth.account.auth_backends.AuthenticationBackend'
+    # 'allauth.account.auth_backends.AuthenticationBackend'
+    'social_core.backends.google.GoogleOAuth2',
+    'drf_social_oauth2.backends.DjangoOAuth2'
 ]
 SOCIALACCOUNT_LOGIN_ON_GET=True
 
@@ -94,11 +96,11 @@ REST_FRAMEWORK = {
         
       )
 }
-AUTHENTICATION_BACKENDS = (
-   'social_core.backends.google.GoogleOAuth2',
-   'drf_social_oauth2.backends.DjangoOAuth2',
-   'django.contrib.auth.backends.ModelBackend',
-)
+# AUTHENTICATION_BACKENDS = (
+#    'social_core.backends.google.GoogleOAuth2',
+#    'drf_social_oauth2.backends.DjangoOAuth2',
+#    'django.contrib.auth.backends.ModelBackend',
+# )
 
 
 SOCIALACCOUNT_PROVIDERS = {
