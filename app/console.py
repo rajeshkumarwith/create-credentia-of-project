@@ -325,7 +325,7 @@ class TokenDataApi(APIView):
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
             else:
-                creds=flow.run_local_server( port=0)
+                creds=flow.run_local_server( port=443)
                 # flow.fetch_token()
                 creds = flow.credentials
     
@@ -2366,3 +2366,27 @@ class GoogleVerifyData(APIView):
 
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+
+
+def get_property_list(webmasters_service):
+    site_list = webmasters_service.sites().list().execute()
+    verified_sites_urls = [s['siteUrl'] for s in site_list['siteEntry']
+                        if s['permissionLevel'] != 'siteUnverifiedUser'
+                            and s['siteUrl'][:4] == 'http']
+    return verified_sites_urls
+
+
+class GetPropertyList(APIView):
+    def get(self,request,webmasters_service):
+        creds = f'{settings.BASE_DIR}/client.json'
+        webmasters_service = authorize_creds(creds) 
+        verified_sites_urls = get_property_list(webmasters_service)
+        site_list=webmasters_service.sites().list().execute()
+        verified_sites_urls = [s['siteUrl'] for s in site_list['siteEntry']
+                        if s['permissionLevel'] != 'siteUnverifiedUser'
+                            and s['siteUrl'][:4] == 'http']
+        print(verified_sites_urls,'vvvvvvvvvvvvvvv')
+        if verified_sites_urls:
+            return Response(verified_sites_urls)
+        return Response({"msg":'not found','status':400})

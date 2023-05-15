@@ -53,6 +53,7 @@ urlpatterns=[
     path('token/',TokenDataApi.as_view(),name='token'),
     path('weekly/',SearchAPIView.as_view(),name='weekly'),
     path('domainverify/',GoogleVerifyData.as_view(),name='google_auth_callback'),
+    path('getlist/',GetPropertyList.as_view(),name='get')
     
   
  
