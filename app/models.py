@@ -147,6 +147,7 @@ class GoogleToken(models.Model):
 
 
 class GoogleSearchConsoleTokenData(models.Model):
+    project=models.TextField(blank=True,null=True)
     token = models.CharField(max_length=255,blank=True,null=True)
     refresh_token = models.CharField(max_length=255,blank=True,null=True)
     token_uri=models.URLField(max_length=200)

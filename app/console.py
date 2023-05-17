@@ -112,10 +112,11 @@ class GetCountryAPI(APIView):
             # specify the project URL to get data for
 
             # query the API for the specified URL's project data
+            project=request.data.get('project')
             days_ago=7
             start_date = (datetime.today() - timedelta(days=days_ago)).strftime('%Y-%m-%d')
             response = service.searchanalytics().query(
-                siteUrl='sc-domain:hptourtravel.com',
+                siteUrl='sc-domain:'+str(project),
                 body={
                     'startDate': start_date,
                     'endDate': start_date,
@@ -309,8 +310,9 @@ import random
 
 class TokenDataApi(APIView):
     def get(self,request,*args,**kwargs):
-        scopes = ['https://www.googleapis.com/auth/webmasters.readonly']
-
+        # scopes = ['https://www.googleapis.com/auth/webmasters.readonly']
+        project=request.data.get('project')
+        # response = service.sites().add(siteUrl='https://' + project + '/').execute()
         # flow = InstalledAppFlow.from_client_secrets_file(
         #      f'{settings.BASE_DIR}/client.json', scopes=scopes)
         flow = InstalledAppFlow.from_client_secrets_file(
@@ -328,13 +330,18 @@ class TokenDataApi(APIView):
                 creds=flow.run_local_server( port=0)
                 # flow.fetch_token()
                 creds = flow.credentials
-    
-      
-      
-        GoogleSearchConsoleTokenData.objects.update_or_create(token=creds.token,refresh_token=creds.refresh_token,token_uri=creds.token_uri,client_id=creds.client_id,client_secret=creds.client_secret,
-                                                    scopes=creds.scopes,expiry=creds.expiry)
 
         service=build('searchconsole', 'v1',credentials=creds)
+        sites = service.sites().list().execute()
+        # response = service.sites().add(siteUrl='https://' + project + '/').execute()
+        # for sites in sites['siteEntry']:
+        #     print(sites['siteUrl'],'sssssssss')
+        #     if project==sites['siteUrl'].replace('sc-domain:','').replace('/','').replace('https:','').replace('http:','').replace('www.',''):
+        #         return Response({'msg':'ownership found'})
+        #     else:
+        #         return Response({'msg':'ownership not found'})
+        # GoogleSearchConsoleTokenData.objects.update_or_create(project=sites['siteEntry'],token=creds.token,refresh_token=creds.refresh_token,token_uri=creds.token_uri,client_id=creds.client_id,client_secret=creds.client_secret,scopes=creds.scopes,expiry=creds.expiry)
+        
         print(type(service))
         # Print the access token and refresh token
         print("Access Token: ", creds.token)
@@ -344,9 +351,23 @@ class TokenDataApi(APIView):
         print('client_secret',creds.client_secret)
         print('scopes',creds.scopes)
         print('expiry',creds.expiry)
-        # return Response({'AccessToken':creds.token,'RefreshToken':creds.refresh_token})
-        return Response(status=status.HTTP_200_OK)
-        # return Response(service)
+
+        is_verified = False 
+        for entry in sites['siteEntry']:
+            url = entry['siteUrl'].replace('sc-domain:','').replace('/','')
+            peimission =  entry['permissionLevel']
+            if project == url:
+                if peimission == 'siteFullUser':
+                    is_verified = True
+                break
+        
+        if is_verified:
+            return Response({"msg":"Permission level 'siteFullUser' found for project:"})
+        return Response({"msg":"Project not found in site_urls list"})
+
+        #     site_urls.append(entry['permissionLevel'])
+            
+     
 
 from google.oauth2.credentials import Credentials
 
@@ -365,7 +386,9 @@ def oauth2callback(request):
     )
     flow.redirect_uri ='http://localhost:8000/search-console/callback'
 
+
     authorization_response = request.build_absolute_uri()
+    print(authorization_response,'aaaaaarrrrrrrrrrrrr')
     flow.fetch_token(authorization_response=authorization_response)
 
     credentials = flow.credentials
@@ -510,8 +533,9 @@ def GetDeviceAPI(request):
     # service = gsc_auth(scopes)
     # sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:hptourtravel.com').execute()
     # service = gsc_auth(scopes)
-    service = build('searchconsole', 'v1', credentials=creds)
 
+    service = build('searchconsole', 'v1', credentials=creds)
+    project=request.data.get('project')
     list=[]
     print(service,'sssssssssss')
     request = {
@@ -522,9 +546,9 @@ def GetDeviceAPI(request):
     ],
     "rowLimit": 25000
     }
-    gsc_search_analytics = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
+    gsc_search_analytics = service.searchanalytics().query(siteUrl='sc-domain:' +str(project), body=request).execute()
     df = pd.DataFrame(gsc_search_analytics['rows'])
-    response = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
+    response = service.searchanalytics().query(siteUrl='sc-domain:'+str(project), body=request).execute()
 
     output_rows=[]
     for row in response['rows']:
@@ -1313,25 +1337,42 @@ class DomainVerify(APIView):
         project = request.data.get('project')
         # creds = Credentials.from_authorized_user_file(f'{settings.BASE_DIR}/TOKEN_FILE', ['https://www.googleapis.com/auth/webmasters'])
         creds = Credentials.from_service_account_file(f'{settings.BASE_DIR}/credentials.json', scopes=['https://www.googleapis.com/auth/webmasters'])
-        service = build('webmasters', 'v3', credentials=creds)
+        search_console = build('webmasters', 'v3', credentials=creds)
         try:
-            # response = service.sites().add(siteUrl='https://' + project + '/').execute()
-            # return Response(status=status.HTTP_200_OK)
+            project=request.data.get('project')
+            service=build('searchconsole','v1',credentials=creds)
+            sites=service.sites().list().execute()
+            print(sites,'sssssssssssss')
+            for i in sites.values():
+                for j in i:
+                    if project==j['siteUrl'].replace('sc-domain:','').replace('/','').replace('https:','').replace('http:','').replace('www.',''):
+                        return Response(status=status.HTTP_200_OK)
 
-            site_url = "sc-domain:"+str(project) 
-            response = service.sites().add(siteUrl='https://' + project + '/').execute()
-            verification_code = hashlib.sha256(response.encode("utf-8")).hexdigest()
-            print(verification_code)
-            verification_file_content = f"google-site-verification: google{verification_code}.html"
-            return Response(status=status.HTTP_200_OK)
-           
         except HttpError as error:
+            # Handle HttpError exceptions
             return Response({'error': error.resp.status}, status=error.resp.status)
 
         except KeyError:
+            # Handle KeyError exceptions
             return Response({'error': 'siteVerificationMethod key not found'}, status=400)
+        except:
+            response = search_console.sites().add(siteUrl='https://' + project + '/').execute()
+            return Response(status=status.HTTP_200_OK)
 
 
+# class DomainVerify(APIView):
+#     def post(self,request,*args,**kwargs):
+#         project=request.data.get('project')
+#         service=build('searchconsole','v1',credentials=creds)
+#         sites=service.sites().list().execute()
+#         print(sites,'sssssssssssss')
+#         for i in sites.values():
+#             for j in i:
+#                 if project==j['siteUrl'].replace('sc-domain:','').replace('/','').replace('https:','').replace('http:','').replace('www.',''):
+#                     return Response(status=status.HTTP_200_OK)
+#         return Response(status=status.HTTP_400_BAD_REQUEST)
+                
+      
 import os
 from google.oauth2 import service_account
 from googleapiclient.errors import HttpError
