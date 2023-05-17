@@ -340,7 +340,7 @@ class TokenDataApi(APIView):
         #         return Response({'msg':'ownership found'})
         #     else:
         #         return Response({'msg':'ownership not found'})
-        # GoogleSearchConsoleTokenData.objects.update_or_create(project=sites['siteEntry'],token=creds.token,refresh_token=creds.refresh_token,token_uri=creds.token_uri,client_id=creds.client_id,client_secret=creds.client_secret,scopes=creds.scopes,expiry=creds.expiry)
+        GoogleSearchConsoleTokenData.objects.update_or_create(project=sites['siteEntry'],token=creds.token,refresh_token=creds.refresh_token,token_uri=creds.token_uri,client_id=creds.client_id,client_secret=creds.client_secret,scopes=creds.scopes,expiry=creds.expiry)
         
         print(type(service))
         # Print the access token and refresh token
@@ -363,7 +363,9 @@ class TokenDataApi(APIView):
         
         if is_verified:
             return Response({"msg":"Permission level 'siteFullUser' found for project:"})
+            # return Response(status=status.HTTP_200_OK)
         return Response({"msg":"Project not found in site_urls list"})
+        # return Response(status=status.HTTP_400_BAD_REQUEST)
 
         #     site_urls.append(entry['permissionLevel'])
             
