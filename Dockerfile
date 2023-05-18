@@ -16,13 +16,16 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /code
 
-
 COPY requirements.txt .
 
 RUN pip install -r requirements.txt
 
+RUN groupadd -r doddle && useradd -r -g doddle doddle
 
-COPY . .
+RUN mkdir -p /code/media /code/static \
+  && chown -R doddle:doddle /code/
+  
+COPY . /code
 
 
 

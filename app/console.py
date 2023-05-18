@@ -307,6 +307,7 @@ from google.auth import credentials
 from google.auth.transport.requests import AuthorizedSession
 import google_auth_oauthlib.flow
 import random
+from django.conf import settings
 
 class TokenDataApi(APIView):
     def get(self,request,*args,**kwargs):
@@ -327,9 +328,16 @@ class TokenDataApi(APIView):
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
             else:
-                creds=flow.run_local_server( port=0)
-                # flow.fetch_token()
-                creds = flow.credentials
+                if settings.DEBUG:
+
+                    creds=flow.run_local_server(port=0)
+                    # flow.fetch_token()
+                    creds = flow.credentials
+                else:
+                    creds=flow.run_local_server(port=0, ssl_context=(settings.SSL_CERTIFICATE, settings.SSL_PRIVATE_KEY))
+                    # flow.fetch_token()
+                    creds = flow.credentials
+                    
 
         service=build('searchconsole', 'v1',credentials=creds)
         sites = service.sites().list().execute()
@@ -1810,5 +1818,37 @@ def get_property_list(webmasters_service):
                         if s['permissionLevel'] != 'siteUnverifiedUser'
                             and s['siteUrl'][:4] == 'http']
     return verified_sites_urls
+
+
+from django.http import HttpResponseRedirect
+from django.urls import reverse
+from django.shortcuts import render
+from google_auth_oauthlib import flow
+
+def authorize(request):
+    state = request.session['state']
+    flow = flow.Flow.from_client_secrets_file(
+        'client_secret.json',
+        scopes=['https://www.googleapis.com/auth/drive.metadata.readonly'],
+        state=state)
+    flow.redirect_uri = request.build_absolute_uri(reverse('oauth2callback'))
+
+    authorization_response = request.build_absolute_uri()
+    flow.fetch_token(authorization_response=authorization_response)
+
+    # Store the credentials in the session.
+    # ACTION ITEM for developers:
+    #     Store user's access and refresh tokens in your data store if
+    #     incorporating this code into your real app.
+    credentials = flow.credentials
+    request.session['credentials'] = {
+        'token': credentials.token,
+        'refresh_token': credentials.refresh_token,
+        'token_uri': credentials.token_uri,
+        'client_id': credentials.client_id,
+        'client_secret': credentials.client_secret,
+        'scopes': credentials.scopes}
+    
+    return HttpResponseRedirect(reverse('home'))
 
 
