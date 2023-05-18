@@ -6,6 +6,8 @@ services:
     command: python manage.py runserver 0.0.0.0:7001
     ports:
      - 7001:7001
+    environment:
+      - .env
 
 
 

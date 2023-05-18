@@ -14,8 +14,6 @@ router.register('pages',views.TopPageAPI,basename='page')
 router.register('save',views.SearchAPIView, basename='save')
 
 
-
-# router.register('list',views.SearchListdataView,basename='list')
 urlpatterns=[
     path('api/token/', jwt_views.TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
@@ -53,7 +51,6 @@ urlpatterns=[
     path('token/',TokenDataApi.as_view(),name='token'),
     path('weekly/',SearchAPIView.as_view(),name='weekly'),
     path('domainverify/',GoogleVerifyData.as_view(),name='google_auth_callback'),
-    path('getlist/',GetPropertyList.as_view(),name='get'),
     path('authcallback/',oauth2callback,name='auth'),
     
   

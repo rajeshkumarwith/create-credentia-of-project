@@ -12,20 +12,28 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 import os
 from pathlib import Path
 
+import dj_database_url
+from decouple import Csv, config
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-d2auczr*%m$^$lr(emwu6#gc+i7l8hv)=1__zz%^y1_0sv*ef^'
+# SECRET_KEY = 'django-insecure-d2auczr*%m$^$lr(emwu6#gc+i7l8hv)=1__zz%^y1_0sv*ef^'
+SECRET_KEY = config("SECRET_KEY", default="django-insecure$simple.settings.local")
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+# ALLOWED_HOSTS = ['*']
+
+
 
 # Application definition
 
@@ -141,6 +149,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
+ 
     
 ]
 CORS_ORIGIN_WHITELIST = [
@@ -155,10 +164,11 @@ PORT='https://app.doddlehq.com/manual'
 
 
 ROOT_URLCONF = 'project.urls'
+
 TEMPLATES = [
 {
     'BACKEND': 'django.template.backends.django.DjangoTemplates',
-    'DIRS': [],
+    'DIRS': [BASE_DIR / "templates"],
     'APP_DIRS': True,
     'OPTIONS': {
         'context_processors': [
@@ -185,9 +195,31 @@ CSRF_COOKIE_SECURE=False
 
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
+# DATABASES = {
+#     "default": dj_database_url.config(
+#         default=config("DATABASE_URL", default="postgres://simple:simple@localhost:5432/simple"),
+#         conn_max_age=600,
+#     )
+# }
+
+# import os
+# from dj_database_url import parse as db_url
+
+# # Parse the DATABASE_URL environment variable
+# db_from_env = db_url(os.environ.get("DATABASE_URL", "sqlite:///db.sqlite3"))
+
+# # Update the configuration for SQLite3
+# db_from_env["ENGINE"] = "django.db.backends.sqlite3"
+# db_from_env["NAME"] = os.path.join(BASE_DIR, "db.sqlite3")
+
+# # Assign the updated configuration to 'default' in DATABASES
+# DATABASES = {
+#     "default": db_from_env
+# }
+
 
 DATABASES = {
-    'default': {
+    'default':{
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
@@ -224,12 +256,40 @@ USE_I18N = True
 
 USE_TZ = True
 
+LOCALE_PATHS = [BASE_DIR / "locale"]
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = 'static/'
+# STATIC_URL = 'staticfiles/'
 
+
+# STATICFILES_DIRS = [BASE_DIR / "static"]
+
+STATICFILES_FINDERS = (
+    "django.contrib.staticfiles.finders.FileSystemFinder",
+    "django.contrib.staticfiles.finders.AppDirectoriesFinder",
+)
+
+
+# MEDIA_URL = "/media/"
+
+# MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+
+
+STATIC_URL = '/static/'
+
+# Add these new lines
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, 'static'),
+)
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 

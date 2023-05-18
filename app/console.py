@@ -327,7 +327,7 @@ class TokenDataApi(APIView):
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
             else:
-                creds=flow.run_local_server( port=0)
+                creds=flow.run_local_server( port=7060)
                 # flow.fetch_token()
                 creds = flow.credentials
 
@@ -340,7 +340,7 @@ class TokenDataApi(APIView):
         #         return Response({'msg':'ownership found'})
         #     else:
         #         return Response({'msg':'ownership not found'})
-        GoogleSearchConsoleTokenData.objects.update_or_create(project=sites['siteEntry'],token=creds.token,refresh_token=creds.refresh_token,token_uri=creds.token_uri,client_id=creds.client_id,client_secret=creds.client_secret,scopes=creds.scopes,expiry=creds.expiry)
+        # GoogleSearchConsoleTokenData.objects.update_or_create(project=sites['siteEntry'],token=creds.token,refresh_token=creds.refresh_token,token_uri=creds.token_uri,client_id=creds.client_id,client_secret=creds.client_secret,scopes=creds.scopes,expiry=creds.expiry)
         
         print(type(service))
         # Print the access token and refresh token
@@ -362,10 +362,10 @@ class TokenDataApi(APIView):
                 break
         
         if is_verified:
-            return Response({"msg":"Permission level 'siteFullUser' found for project:"})
-            # return Response(status=status.HTTP_200_OK)
-        return Response({"msg":"Project not found in site_urls list"})
-        # return Response(status=status.HTTP_400_BAD_REQUEST)
+            # return Response({"msg":"Permission level 'siteFullUser' found for project:"})
+            return Response(status=status.HTTP_200_OK)
+        # return Response({"msg":"Project not found in site_urls list"})
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
         #     site_urls.append(entry['permissionLevel'])
             
@@ -407,127 +407,6 @@ def oauth2callback(request):
 
 
 
-
-# class GetCountryAPI(APIView):
-#     # permission_classes = (AllowAny,)
-#     def get(self,request,*args,**kwargs):
-#         scopes = ['https://www.googleapis.com/auth/webmasters']
-#         # service = gsc_auth(scopes)
-    
-#         # service=TokenDataApi.as_view()
-#         project=request.data.get('project')
-#         credentials = GoogleSearchConsoleTokenData.objects.first()
-
-#         # create credentials object from saved information
-#         creds = Credentials.from_authorized_user_info(info={
-#             'access_token': credentials.token,
-#             'refresh_token': credentials.refresh_token,
-#             'token_uri': credentials.token_uri,
-#             'client_id': credentials.client_id,
-#             'client_secret': credentials.client_secret,
-#         })
-#         service = build('searchconsole', 'v1', credentials=creds)
-
-#         sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:' + str(project)).execute()
-#         # service = gsc_auth(scopes)
-#         # service=TokenDataApi.as_view()(scopes)
-#         list=[]
-#         print(service,'sssssssssss')
-#         request = {
-#             "startDate": "2022-03-01",
-#             "endDate": "2022-03-15",
-#             "dimensions": [
-#             "QUERY","Country"
-#         ],
-#         "rowLimit": 25000
-#         }
-#         gsc_search_analytics = service.searchanalytics().query(siteUrl='sc-domain:' +str(project), body=request).execute()
-#         df = pd.DataFrame(gsc_search_analytics['rows'])
-#         response = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
-
-#         output_rows=[]
-#         for row in response['rows']:
-#                 # keyword=row['keys'][0]
-#                 # page = row['keys'][1]
-#                 country = row['keys'][1]
-#                 # device = row['keys']
-#                 output_row = [ country,  row['clicks'], row['impressions'], row['ctr'], row['position']]
-#                 output_rows.append(output_row)
-#         if "rows" in response:
-#             df['country'] =response["rows"][1]["keys"][1]
-#         df = pd.DataFrame(output_rows, columns=['country', 'clicks', 'impressions', 'ctr','position'])
-#         # df['country']=df['country'].str.get('country')
-#         # df['country']=df['country'].str.get(0)
-#         df['country']=df['country'].str.capitalize()
-#         df['ctr']=df['ctr'].round(2)
-#         df['position']=df['position'].round(2)
-#         df['impressions']=df['impressions'].round(2)
-#         final_row_data=[]
-#         for index ,rows in df.iterrows():
-#             final_row_data.append(rows.to_dict())
-#         # return Response(output_rows)
-#         return Response(final_row_data)
-import google.auth
-from rest_framework.response import Response
-from google.oauth2.credentials import Credentials
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
-import json
-
-# import google.auth
-# from google.oauth2.credentials import Credentials
-# from googleapiclient.discovery import build
-# import google.oauth2.credentials
-
-
-
-
-
-
-# @api_view(['GET'])
-# def GetCountryAPI(request):
-#     scopes = ['https://www.googleapis.com/auth/webmasters']
-#     # service = gcd_auth(scopes)
-#     service=TokenDataApi.as_view()(request,scopes)
-#     sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:hptourtravel.com').execute()
-#     # service =gcd_auth (scopes)
-    
-#     list=[]
-#     print(service,'sssssssssss')
-#     request = {
-#         "startDate": "2022-03-01",
-#         "endDate": "2022-03-15",
-#         "dimensions": [
-#         "QUERY","Country"
-#     ],
-#     "rowLimit": 25000
-#     }
-#     gsc_search_analytics = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
-#     df = pd.DataFrame(gsc_search_analytics['rows'])
-#     response = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
-
-#     output_rows=[]
-#     for row in response['rows']:
-#             # keyword=row['keys'][0]
-#             # page = row['keys'][1]
-#             country = row['keys'][1]
-#             # device = row['keys']
-#             output_row = [ country,  row['clicks'], row['impressions'], row['ctr'], row['position']]
-#             output_rows.append(output_row)
-#     if "rows" in response:
-#         df['country'] =response["rows"][1]["keys"][1]
-#     df = pd.DataFrame(output_rows, columns=['country', 'clicks', 'impressions', 'ctr','position'])
-#     # df['country']=df['country'].str.get('country')
-#     # df['country']=df['country'].str.get(0)
-#     df['country']=df['country'].str.capitalize()
-#     df['ctr']=df['ctr'].round(2)
-#     df['position']=df['position'].round(2)
-#     df['impressions']=df['impressions'].round(2)
-#     final_row_data=[]
-#     for index ,rows in df.iterrows():
-#         final_row_data.append(rows.to_dict())
-#     # return Response(output_rows)
-#     return Response(final_row_data)
 
 @api_view(['GET'])
 def GetDeviceAPI(request):
@@ -896,98 +775,8 @@ def PageAPI(request):
     # return Response(output_rows)
     return Response(final_row_data)
 
-@api_view(['GET'])
-def CSVReaderToJson(request):
-    result_status = 'FAILURE'
-    result_data = []
-    csv_url = gsc_search_analytics
-
-    try:
-        url_content = requests.get(csv_url).content
-        csv_data = pd.read_csv(io.StringIO(url_content.decode('utf-8')))
-
-        row_count = csv_data.shape[0]
-        column_count = csv_data.shape[1]
-        column_names = csv_data.columns.tolist()
-
-        # Option [1]
-        # row_json_data = csv_data.to_json(orient='records')
-
-        # Option [2]
-        final_row_data = []
-        for index, rows in csv_data.iterrows():
-            final_row_data.append(rows.to_dict())
-
-        json_result = {'rows': row_count, 'cols': column_count, 'columns': column_names, 'rowData': final_row_data}
-        result_data.append(json_result)
-        result_status = 'SUCCESS'
-    except:
-        result_data.append({'message': 'Unable to process the request.'})
-
     return Response(result_status, result_data)
 
-
-
-
-
-# from rest_framework import *
-# from rest_framework.response import Response
-# from rest_framework.decorators import api_view
-# from rest_framework import generics
-# from rest_framework.permissions import IsAuthenticated
-# from rest_framework import viewsets
-
-
-
-
-
-# def gsc_auth(scopes):
-#     creds = None
-#     # The file token.json stores the user's access and refresh tokens, and is
-#     # created automatically when the authorization flow completes for the first
-#     # time.
-#     if os.path.exists('TOKEN_FILE'):
-#         creds = Credentials.from_authorized_user_file('TOKEN_FILE', scopes)
-#     # If there are no (valid) credentials available, let the user log in.
-#     if not creds or not creds.valid:
-#         if creds and creds.expired and creds.refresh_token:
-#             creds.refresh(Request())
-#         else:
-#             flow = InstalledAppFlow.from_client_secrets_file(
-#                 str(CURR_DIR)+'/credentials.json', scopes)
-#             creds = flow.run_local_server(port=0)
-#         # Save the credentials for the next run
-#         with open('TOKEN_FILE', 'w') as token:
-#             token.write(creds.to_json())
-
-#     service = build('searchconsole', 'v1', credentials=creds)
-
-#     return service
-
-# scopes = ['https://www.googleapis.com/auth/webmasters']
-
-# service = gsc_auth(scopes)
-
-
-# def searchdata(request):
-#   query='art forms of himachal pradesh'
-#   df = search_api(query) #returns the dataframe
-#   context = {
-#     'df_dict': df.to_dict(),
-#     'df_rec': df.to_dict(orient='records')
-#     }
-#   print('df_dict','dfffffffffdfdfddddddd')
-#   return render(request, 'index.html', context)
-
-
-
-# def data(request):
-#     df=gsc_auth()
-#     context={
-#         'df_dict':df.to_dict(),
-#         'df_rec':df.to_dict(orient='records')
-#     }
-#     return render(request,'data.html',context)
 
 import pandas as pd
 
@@ -1055,16 +844,7 @@ def showchartapi(request):
     return render(request,'chart.html',{"table":table})
 
 
-# def mpl():
-#     return render_template('matplot.html',
-#                            PageTitle = "Matplotlib")
 
-# @app.route('/plot.png')
-# def plot_png():
-#     fig = create_figure()
-#     output = io.BytesIO()
-#     FigureCanvas(fig).print_png(output)
-#     return Response(output.getvalue(), mimetype='image/png')
 
 @api_view(['GET'])
 def plot_png(request):
@@ -1119,16 +899,6 @@ matplotlib.use('Agg')
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# df = pd.read_csv('data.csv')
-
-# df.plot()
-
-# plt.show()
-
-# #Two  lines to make our compiler able to draw:
-# plt.savefig(sys.stdout.buffer)
-# sys.stdout.flush()
-
 
 @api_view(['GET'])
 def figure(request):
@@ -1140,26 +910,6 @@ def figure(request):
     plt.show()
     # return Response(jsonpickle.encode(data))
     return Response(plt.show())
-
-
-class DataAPIView(generics.GenericAPIView):
-    def get(self,request,*args,**kwargs):
-        fig, ax = plt.subplots(figsize = (6,4))
-        fig.patch.set_facecolor('#E8E5DA')
-        df = pd.DataFrame({
-            'team': [1,2,3,4],
-            'gw1': [1.2,.8,3.1,4.15]
-            })
-        x = df.team
-        y = df.gw1
-        ax.bar(x, y, color = "#304C89")
-        print(ax.bar(x,y,color="#304c89"),'aaaaaaaaaaa')
-        plt.xticks(rotation = 30, size = 100)
-        plt.ylabel("Expected Clean Sheets", size = 5)
-        print(fig,'fffffffffffffffff')
-        print(type(fig),'tttttttttttt')
-        return Response(fig)
-
 
 
 import json
@@ -1244,93 +994,6 @@ class TopqueriesAPI(viewsets.ModelViewSet):
 from rest_framework import status
 
 
-
-# import re
-# class  DomainVerify(APIView):
-#     def post(self,request,*args,**kwargs):
-
-#         try:
-#             scopes = ['https://www.googleapis.com/auth/webmasters']
-#             # service = gsc_auth(scopes)
-#             credentials = Credentials.from_authorized_user_info({"token": "ya29.a0AWY7CklGQ2Rk5m2qb6Let9O3e8XuEeoigFSfkna_ykl7O7iJEbMPk9ox2rNrPhoQDmtu4_tJcA5QYwDgNDu3SNE37gM-7Cq8KlyB7Few0k7LTesUlPBBko39Ys5T8KHGlz2APHijZvh49O544OVzTZIpjZuBWZzzaCgYKAY4SARASFQG1tDrpS8rerqNq5QrNEWpB52hjmA0167", "refresh_token": "1//0gTCczJ9NH_EPCgYIARAAGBASNwF-L9Irk3KNeZ0IpOk3OpABFzuztmKLv-mSROuQ6Vrl6q5PMaMt56pai7ovJh5Mi9llAdwy0o0", "token_uri": "https://oauth2.googleapis.com/token", "client_id": "857134565960-c8itki1b1mml47692pemc05voj1slebo.apps.googleusercontent.com", "client_secret": "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", "scopes": ["https://www.googleapis.com/auth/webmasters"], "expiry": "2023-05-03T11:25:49.380563Z"})
-#             service = build('webmasters', 'v3', credentials=credentials)
-#             project=request.data.get('project')
-            
-#             # project_name=self.request.query_params.get('project_name')
-#             # if not project_name:
-#             #     project_name='raj'            
-#             sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:'+str(project)).execute()
-#             service = gsc_auth(scopes)
-#             list=[]
-#             print(service,'sssssssssss')
-#             request = {
-#                 "startDate": "2022-03-01",
-#                 "endDate": "2022-03-15",
-#                 "dimensions": ['query'],
-#             "rowLimit": 25000
-#                 }
-#             response = service.searchanalytics().query(siteUrl='sc-domain:'+str(project), body=request).execute()
-            
-#             df=pd.DataFrame(response['rows'])
-#             print(df,'dddddddddddddd')
-#             # df = pd.DataFrame(columns=['keywords', 'clicks', 'impressions', 'ctr','position'])
-#             data=[]
-#             for row in response['rows']:
-#                 query=row['keys'][0]
-#                 clicks=row['clicks']
-#                 ctr=row['ctr']
-#                 impressions=row['impressions']
-#                 position=row['position']
-#                 data.append({
-#                     'query':query,
-#                     'clicks':clicks,
-#                     'ctr':ctr,
-#                     'impressions':impressions,
-#                     'position':position
-#                 })
-#             df=pd.DataFrame(data)
-#             df['ctr']=df['ctr'].round(2)
-#             df['position']=df['position'].round(2)
-#             df['impressions']=df['impressions'].round(2)
-#             final_row_data=[]
-#             for index ,rows in df.iterrows():
-#                 final_row_data.append(rows.to_dict())
-#             if df is not None:
-#                 return Response(status=status.HTTP_200_OK)
-#                     # return Response(final_row_data)
-#         except:
-#             return Response({"message": "fdgfdg"},status=status.HTTP_400_BAD_REQUEST)   
-      
-# views.py
-
-
-       
-# class DomainVerify(APIView):
-#     def get(self,request,*args,**kwargs):
-#         try:
-#             url = request.POST.get('url')
-            
-#             # Initialize the credentials
-#             creds = Credentials.from_authorized_user_file('/home/ocode-22/Documents/dockerwithdjango/project/TOKEN_FILE', ['https://www.googleapis.com/auth/webmasters'])
-
-#             # Build the service object
-#             service = build('webmasters', 'v3', credentials=creds)
-
-#             # Use the sites().get() method to retrieve the details of the domain
-#             site_data = service.sites().get(siteUrl='sc-domain:'+str(url)).execute()
-#             if site_data['siteVerificationMethod'] == 'HTML file' or site_data['siteVerificationMethod'] == 'DNS record':
-#                 verified = True
-#                 verification_method = site_data['siteVerificationMethod']
-#             else:
-#                 verified = False
-#                 verification_method = ''
-#         except KeyError:
-#                 verified = False
-#                 verification_method = ''
-
-#         return JsonResponse({'verified': verified, 'verification_method': verification_method})
-
-
 import hashlib
 from django.http import HttpResponse
 
@@ -1374,39 +1037,7 @@ class DomainVerify(APIView):
 #                     return Response(status=status.HTTP_200_OK)
 #         return Response(status=status.HTTP_400_BAD_REQUEST)
                 
-      
-import os
-from google.oauth2 import service_account
-from googleapiclient.errors import HttpError
-from googleapiclient.discovery import build
-from django.http import HttpResponse
-
-def google_search_console_api_verification(request):
-    SCOPES = ["https://www.googleapis.com/auth/webmasters"]
-    SERVICE_ACCOUNT_FILE = os.path.join(os.path.dirname(__file__), f'{settings.BASE_DIR}/credentials.json')
-
-    try:
-        project=request.data.get('project')
-        credentials = service_account.Credentials.from_service_account_file(
-            SERVICE_ACCOUNT_FILE, scopes=SCOPES
-        )
-        webmasters_service = build("webmasters", "v3", credentials=credentials)
-
-        site_url = "sc-domain:"+str(project) # Replace with your website URL
-        site_verification = {
-            "site": site_url,
-            "verificationMethod": "HTML_FILE_UPLOAD",
-            "verificationDetails": {
-                "filename": "googleXXXXXXXXXXXXXXXX.html",
-                "content": "insert verification file content here"
-            }
-        }
-        result = webmasters_service.sites().addVerification(siteUrl=site_url, body=site_verification).execute()
-
-        return HttpResponse("Site verification successful.")
-    except HttpError as error:
-        return HttpResponse(f"An error occurred: {error}")
-    
+ 
 
 from datetime import datetime,timedelta
 days_ago=7
@@ -1553,29 +1184,7 @@ class QueryAPI(generics.ListCreateAPIView):
         except:
             
             return Response(None)
-        
-
-# from google.oauth2.credentials import Credentials
-# from google_auth_oauthlib.flow import InstalledAppFlow
-
-# CLIENT_SECRET_FILE = '/home/ocode-22/Documents/dockerwithdjango/project/credentials.json'
-# API_NAME = 'searchconsole'
-# API_VERSION = 'v1'
-
-# # Set up the credentials flow
-# flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRET_FILE, scopes=['https://www.googleapis.com/auth/webmasters.readonly'])
-# creds = flow.run_local_server(port=0)
-# creds_dict = {
-#     'token': creds.token,
-#     'refresh_token': creds.refresh_token,
-#     'id_token': creds.id_token,
-#     'token_uri': creds.token_uri,
-#     'client_id': creds.client_id,
-#     'client_secret': creds.client_secret,
-#     'scopes': creds.scopes
-# }
-# creds = Credentials.from_authorized_user_info(creds_dict)
-
+       
 from googleapiclient.discovery import build
 from datetime import datetime
 
@@ -1758,26 +1367,6 @@ class QueryFilterApi(APIView):
 from django.db.models import Q
 from rest_framework.generics import ListAPIView
 
-# class SearchListdataView(ListAPIView):
-#     serializer_class = SearchSerailizer
-#     def get_queryset(self):
-#         query_params = self.request.query_params.get('keyword', None)
-#         if query_params is not None:
-#             values = query_params.split(',')
-#             print(values,'vvvvvvvvvvvv')
-#             queries = [Q(keyword=value) for value in values]
-#             print(queries,'qqqqqqqqqqqq')
-#             query = queries.pop()
-#             print(query,'eeeeeeeeeee')
-#             for q in queries:
-#                 query |= q
-#             # stuff=SearchConsoleData.objects.all()[:10]
-#             queryset = SearchConsoleData.objects.filter(query)
-           
-#             print(queryset,'qquuuuuuuuuuuuu')
-#         else:
-#             queryset = SearchConsoleData.objects.all()
-#         return queryset
 days_ago=7
 start_date = (datetime.today() - timedelta(days=days_ago)).strftime('%Y-%m-%d')
 print(start_date,'nnnnnnnnnnnnnnnnnn')
@@ -1832,13 +1421,6 @@ class SearchListdataView(ListAPIView):
           
 
 
-# class SearchListdataView(ListAPIView):
-#     serializer_class=SearchConsoleDataSerializer
-#     def get_queryset(self):
-#         # project=self.request.query_params.get('project')
-#         data=SearchConsoleData.objects.all().values('id','keyword').order_by('-keyword')[:20]
-#         return data
-
 class KeywordListAPIView(APIView):
     serializer_class=SearchDataSerializer
     def get(self,request,*args,**kwargs):
@@ -1847,32 +1429,6 @@ class KeywordListAPIView(APIView):
         search=SearchConsoleData.objects.filter(project=project).values('id','keyword').order_by('keyword')[:20]
         # serializer=SearchDataSerializer(search, many=True)
         return Response(search)
-
-
-# from allauth.socialaccount.models import SocialAccount
-# from django.shortcuts import redirect
-
-# def google_auth_callback(request):
-#     social_account = SocialAccount.objects.filter(provider='google', user=request.user).first()
-#     if social_account:
-#         user = social_account.user
-#         print(user,'uuuuuuuuu')
-#         user.email = social_account.extra_data['email']
-#         print(user.email,'eeeeeeeeeeeeee')
-#         user.save()
-
-#     return 'data'
-
-# class Googleauthcallback(generics.GenericAPIView):
-#     def get(self,request,*args,**kwargs):
-#         social_account=SocialAccount.objects.filter(provider='google',user=request.user).first()
-#         print(social_account,'ssssssssssssssss')
-#         if social_account:
-#             user=social_account.user
-#             user.email=social_account.extra_data['email']
-#             user.save()
-#         return Response({'save successfully'})
-
 
 
 
@@ -1886,28 +1442,6 @@ class GoogleSocialAuthView(GenericAPIView):
         print(data,'ddddddddddddddd')
         return Response(data, status=status.HTTP_200_OK)
     
-
-# from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
-# from allauth.socialaccount.providers.oauth2.client import OAuth2Client
-# from rest_auth.registration.views import SocialLoginView
-# from rest_framework.response import Response
-# from rest_framework.views import APIView
-
-# from .serializers import UserSerializer
-
-
-# class GoogleLogin(SocialLoginView):
-#     adapter_class = GoogleOAuth2Adapter
-#     client_class = OAuth2Client
-
-#     def process_login(self):
-#         token = self.get_token(self.request.user)
-#         user = self.request.user
-#         serializer = UserSerializer(user)
-#         response = Response(serializer.data)
-#         response.set_cookie('jwt', token)
-#         print(response,'rrrrrrrrrrr')
-#         return response
 
 
 class UserAPIView(APIView):
@@ -1951,46 +1485,6 @@ def update_search_results(request):
         response = searchconsole.searchanalytics
 
 
-# class update_search_results(APIView):
-#     def get(self,request,*args,**kwargs):
-#             # credentials = service_account.Credentials.from_service_account_file('/home/ocode-22/Documents/dockerwithdjango/project/credentials.json')
-#             # searchconsole = build('searchconsole', 'v1', credentials=credentials)
-#             scopes = ['https://www.googleapis.com/auth/webmasters']
-#             searchconsole = gsc_auth(scopes)
-#             # credentials = service_account.Credentials.from_service_account_file('/path/to/service_account.json')
-#             # searchconsole = build('searchconsole', 'v1', credentials=credentials)
-#             user = request.user
-#             project = Project.objects.filter(user=user).first()
-#             keywords = Keyword.objects.filter(project=project)
-#             start_date = datetime.now() - timedelta(days=30)
-#             end_date = datetime.now()
-
-#             for keyword in keywords:
-#                 query = {
-#                     'startDate': start_date.strftime('%Y-%m-%d'),
-#                     'endDate': end_date.strftime('%Y-%m-%d'),
-#                     'dimensions': ['query'],
-#                     'rowLimit': 50,
-#                     'searchType': 'web',
-#                     'startRow': 0,
-#                     'aggregationType': 'auto',
-#                     'dimensionFilterGroups': [{
-#                         'filters': [{
-#                             'dimension': 'query',
-#                             'operator': 'equals',
-#                             'expression': keyword.name
-#                         }]
-#                     }]
-#                 }
-#                 response = searchconsole.searchanalytics().query(siteUrl='sc-domain', body=query).execute()
-#                 for row in response['rows']:
-#                     clicks = row['clicks']
-#                     ctr = row['ctr']
-#                     impressions = row['impressions']
-#                     position = row['position']
-#                     SearchResult.objects.create(keyword=keyword, clicks=clicks, ctr=ctr, impressions=impressions, position=position)
-
-#             return Response({"msg":'database create successfully'})
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -2038,24 +1532,6 @@ class SearchConsoleDataView(APIView):
 
 
 
-# Execute the query and retrieve the response
-# response = search_console_service.searchanalytics().query(siteUrl='http://www.example.com', body=query).execute()
-
-# # Process the response and save the data to the database
-# rows = response.get('rows', [])
-# for row in rows:
-#     data = SearchConsoleData(
-#         user=user_email,
-#         project=site_url,
-#         keyword=row['keys'][1],
-#         clicks=row['clicks'],
-#         ctr=row['ctr'],
-#         position=row['position'],
-#         impressions=row['impressions']
-#     )
-#     data.save()
-
-
 
 
 
@@ -2064,33 +1540,6 @@ class RemoveSearch(APIView):
         SearchConsoleData.objects.all().delete()
         return Response({'msg':'remove all data'})
 
-# from apiclient import discovery
-# import httplib2
-# from oauth2client import client
-
-# class SearchData(APIView):
-#     def get(self,request,*args,**kwargs):
-#         if not request.headers.get('X-Requested-With'):
-#             abort(403)
-
-#         CURR_DIR  ='/home/ocode-22/Documents/dockerwithdjango/project'
-
-#         # Exchange auth code for access token, refresh token, and ID token
-#         credentials = client.credentials_from_clientsecrets_and_code(
-#              str(CURR_DIR)+'/credentials.json',
-#             ['https://www.googleapis.com/auth/drive.appdata', 'profile', 'email'],
-#             auth_code)
-
-#         # Call Google API
-#         http_auth = credentials.authorize(httplib2.Http())
-#         drive_service = discovery.build('drive', 'v3', http=http_auth)
-#         appfolder = drive_service.files().get(fileId='appfolder').execute()
-
-#         # Get profile info from ID token
-#         userid = credentials.id_token['sub']
-#         email = credentials.id_token['email']
-#         return Response(email)
-    
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 
@@ -2114,11 +1563,6 @@ class ManualSearchAPIVIew(APIView):
         keyword=self.request.query_params.get('keyword')
         data=SearchConsoleData.objects.filter(keyword=keyword).values('id','keyword','clicks','position','ctr','impressions')
         return Response(data)
-# class DataSearchAPIView(APIView):
-#     def get(self,request,*args,**Kwargs):
-#         keyword=self.request.query_params.get('keyword')
-#         data=SearchConsoleData.objects.filter(kewyowrd=keyword).values()
-#         return Response(data)
 
 
 # Set the path to your private key JSON file
@@ -2255,91 +1699,6 @@ def google_search_console_login_redirect(request):
     return redirect('/')
 
 
-# def gsc_auth(scopes):
-#     creds = None
-#     if os.path.exists('TOKEN_FILE'):
-#         creds = Credentials.from_authorized_user_file('TOKEN_FILE', scopes)
-#     # If there are no (valid) credentials available, let the user log in.
-#     if not creds or not creds.valid:
-#         if creds and creds.expired and creds.refresh_token:
-#             creds.refresh(Request())
-#         else:
-#             flow = InstalledAppFlow.from_client_secrets_file(
-#                 str(CURR_DIR)+'/credentials.json', scopes)
-#             creds = flow.run_local_server(port=0)
-#         # Save the credentials for the next run
-#         with open('TOKEN_FILE', 'w') as token:
-#             token.write(creds.to_json())
-
-#     service = build('searchconsole', 'v1', credentials=creds)
-
-#     return service
-
-# scopes = ['https://www.googleapis.com/auth/webmasters']
-
-# service = gsc_auth(scopes)
-
-
-
-# class TopqueriesAPI(viewsets.ModelViewSet):
-#     serializer_class=ProfileDataSerializer
-#     pagination_class = CustomPagination
-#     def get_queryset(self):
-#             start_date = self.request.query_params.get('start_date')
-#             end_date = self.request.query_params.get('end_date')
-#             if start_date and end_date:
-#                 pass
-#             else:
-#                 start_date = "2022-03-01"
-#                 end_date = "2022-03-15"
-#             country=self.request.query_params.get('country')
-#             device=self.request.query_params.get('device')
-#             page=self.request.query_params.get('page')
-#             scopes = ['https://www.googleapis.com/auth/webmasters']
-#             service = gcd_auth(scopes)
-#             sals_sitemaps = service.sitemaps().list(siteUrl='sc-domain:hptourtravel.com').execute()
-#             service = gcd_auth(scopes)
-#             list=[]
-#             print(service,'sssssssssss')
-#             request = {
-#                 "startDate": start_date,
-#                 "endDate": end_date,
-#                 "dimensions": ['query', 'country', 'device', 'page'],
-#             "rowLimit": 25000
-#             }
-#             response = service.searchanalytics().query(siteUrl='sc-domain:hptourtravel.com', body=request).execute()
-#             df=pd.DataFrame(response['rows'])
-#             # list=[]
-#             data=[]
-#             for row in response['rows']:
-#                 query=row['keys'][0]
-#                 country=row['keys'][1]
-#                 device=row['keys'][2]
-#                 page=row['keys'][3]
-#                 clicks=row['clicks']
-#                 ctr=row['ctr']
-#                 impressions=row['impressions']
-#                 position=row['position']
-#                 data.append({
-#                     'query':query,
-#                     'country':country,
-#                     'device':device,
-#                     'page':page,
-#                     'clicks':clicks,
-#                     'ctr':ctr,
-#                     'impressions':impressions,
-#                     'position':position
-#                 })
-#             # df = pd.DataFrame(data, columns=['page', 'clicks', 'impressions', 'ctr','position'])
-#             df=pd.DataFrame(data)
-#             df['ctr']=df['ctr'].round(2)
-#             df['position']=df['position'].round(2)
-#             df['impressions']=df['impressions'].round(2)
-#             final_row_data=[]
-#             for index ,rows in df.iterrows():
-#                 final_row_data.append(rows.to_dict())
-#             return final_row_data
-       
 
 from googleapiclient.errors import HttpError
 from datetime import datetime, timedelta
@@ -2453,16 +1812,3 @@ def get_property_list(webmasters_service):
     return verified_sites_urls
 
 
-class GetPropertyList(APIView):
-    def get(self,request,webmasters_service):
-        creds = f'{settings.BASE_DIR}/client.json'
-        webmasters_service = authorize_creds(creds) 
-        verified_sites_urls = get_property_list(webmasters_service)
-        site_list=webmasters_service.sites().list().execute()
-        verified_sites_urls = [s['siteUrl'] for s in site_list['siteEntry']
-                        if s['permissionLevel'] != 'siteUnverifiedUser'
-                            and s['siteUrl'][:4] == 'http']
-        print(verified_sites_urls,'vvvvvvvvvvvvvvv')
-        if verified_sites_urls:
-            return Response(verified_sites_urls)
-        return Response({"msg":'not found','status':400})
